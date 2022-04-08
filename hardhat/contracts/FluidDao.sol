@@ -7,24 +7,37 @@ import {SuperAppBase} from "@superfluid-finance/ethereum-contracts/contracts/app
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 
+import "hardhat/console.sol";
 
-
-contract SuperApp is SuperAppBase {
+contract FluidDao is SuperAppBase {
     using Counters for Counters.Counter;
     Counters.Counter public _proposalIds;
 
     ISuperfluid private _host; // host
     IConstantFlowAgreementV1 private _cfa; // the stored constant flow agreement class address
     ISuperToken private _acceptedToken; // accepted token
-    address private _receiver;
+ 
+    struct Member {
+        bool active;
+        int96 votingPower;
+        uint256 activePrososals;
+    }
 
+    mapping(address => Member) private _members;
 
+    mapping(address => uint256) private _lastPresentedTimeStamp;
+
+    mapping(uint256 => Proposal) private _proposals;
+
+    mapping(uint256 => uint256) private _votingByProposal;
 
     struct Proposal {
         address sender;
         string message;
         string proposalUri;
     }
+
+
 
     constructor(
         ISuperfluid host,
@@ -50,7 +63,88 @@ contract SuperApp is SuperAppBase {
         _host.registerApp(configWord);
     }
 
+  /**************************************************************************
+     * DAO Modifiers
+     *************************************************************************/
+    modifier onlyMembers() {
+        require(isMember(msg.sender), "NOT_MEMBER");
+        _;
+    }
 
+    modifier onlyOnePoposalperWeek() {
+        require(
+            _lastPresentedTimeStamp[msg.sender] + 7 * 24 * 60 * 60 >
+                block.timestamp,
+            "ALREADY_PRESENTED_THIS_WEEK"
+        );
+
+        _;
+    }
+
+    /**************************************************************************
+     * Dao Governance
+     *************************************************************************/
+
+    /**
+     * @notice Returns whether a User is Member of the DAO
+     *
+     * @param member the member address
+     */
+    function isMember(address member) public view returns (bool) {
+        return _members[member].active;
+    }
+
+    /**************************************************************************
+     * Dao proposals
+     *************************************************************************/
+
+    function draftProposal(Proposal memory _draftProposal)
+        public
+        onlyMembers
+        onlyOnePoposalperWeek
+    {
+        _proposalIds.increment();
+        uint256 id = _proposalIds.current();
+        _proposals[id] = _draftProposal;
+    }
+
+    function submitDraftetProposal(Proposal memory _updatedProposal)
+        public
+        onlyMembers
+        onlyOnePoposalperWeek
+    {
+        _proposalIds.increment();
+        uint256 id = _proposalIds.current();
+        _proposals[id] = _updatedProposal;
+    }
+
+    function submitNewProposal(Proposal memory _newProposal)
+        public
+        onlyMembers
+        onlyOnePoposalperWeek
+    {
+        _proposalIds.increment();
+        uint256 id = _proposalIds.current();
+        _proposals[id] = _newProposal;
+    }
+
+    function widthDrawProposal(Proposal memory _withdrawProposal)
+        public
+        onlyMembers
+        onlyOnePoposalperWeek
+    {
+        _proposalIds.increment();
+        uint256 id = _proposalIds.current();
+        _proposals[id] = _withdrawProposal;
+    }
+
+    function vote() public onlyMembers {}
+
+    function unVote() public onlyMembers {}
+
+    function cleanUserActiveProposals() public {}
+
+    function updateActiveProposals() public {}
 
     /**************************************************************************
      * SuperApp callbacks
@@ -77,7 +171,7 @@ contract SuperApp is SuperAppBase {
             sender,
             address(this)
         );
-
+        _members[sender] = Member(true, inFlowRate, 0);
         return _ctx;
     }
 
@@ -101,7 +195,8 @@ contract SuperApp is SuperAppBase {
             sender,
             address(this)
         );
- 
+        updateActiveProposals();
+        _members[sender].votingPower = inFlowRate;
         return _ctx;
     }
 
@@ -115,7 +210,8 @@ contract SuperApp is SuperAppBase {
     ) external virtual override returns (bytes memory newCtx) {
         (address sender, ) = abi.decode(_agreementData, (address, address));
 
-    
+        cleanUserActiveProposals();
+        _members[sender] = Member(false, 0, 0);
         return _ctx;
     }
 

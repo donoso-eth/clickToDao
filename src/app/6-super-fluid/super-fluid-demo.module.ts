@@ -10,7 +10,7 @@ import { DialogModule, NotifierModule} from '../dapp-components'
 
 import { ICONTRACT_METADATA } from 'angular-web3';
 
-import SuperFluidMetadata from '../../assets/contracts/super_app_metadata.json';
+import SuperFluidMetadata from '../../assets/contracts/fluid_dao_metadata.json';
 export const contractMetadata = new InjectionToken<ICONTRACT_METADATA>('contractMetadata')
 
 export const contractProvider= {provide: 'contractMetadata', useValue:SuperFluidMetadata };
