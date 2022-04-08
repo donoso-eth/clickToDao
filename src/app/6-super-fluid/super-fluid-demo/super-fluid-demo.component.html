@@ -1,19 +1,10 @@
-<onchain-home
-  (doFaucetEvent)="doFaucet()"
-  *ngIf="contractHeader !== undefined"
-  [contractHeader]="contractHeader"
-  [blockchain_is_busy]="blockchain_is_busy"
->
+
   <h2>💃💃💃 Your First Smart Contract and DAPP 👏 👏 👏</h2>
   <div style="max-width: 800px; width: 90vw; margin: auto">
     <mat-tab-group mat-align-tabs="center">
       <mat-tab label="Smart Contract">
         <p style="text-align: center; font-size: 20px">
-          <wallet-display
-            [signer]="signer"
-            (doFaucetEvent)="doFaucet()"
-            (openTransactionEvent)="openTransaction()"
-          ></wallet-display>
+    
         </p>
 
         <div
@@ -119,5 +110,3 @@
       contract has been compiled and deployed
     </h2>
   </div>
-  <!-- </onchain-home> --></onchain-home
->
