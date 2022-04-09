@@ -74,8 +74,9 @@ task('create-stream', 'creating stream').setAction(async ({}, hre) => {
 
 
   let day_holder_is_member;
-
-  
+  day_holder_is_member = await fluidDaoContract.functions['isMember'](deployer_address);
+  console.log(day_holder_is_member);
+  return
   const DaiContract = new hre.ethers.Contract(
     '0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f',
     abi_ERC20,
