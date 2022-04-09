@@ -16,17 +16,17 @@ contract FluidDao is SuperAppBase, Ownable {
     IConstantFlowAgreementV1 private _cfa; // the stored constant flow agreement class address
     ISuperToken private _acceptedToken; // accepted token
 
-    /**************************************************************************
-     * DAO GLOBAL CONFIG
-     *************************************************************************/
+    
+    //  ====== ==== ===  DAO GLOBAL CONFIG ====== ==== ========= ==== === //
 
     uint256 private PROPOSAL_PERIOD = 7 * 24 * 60 * 60;
     uint256 private MAX_ACTIVE_PROPOSAL = 5;
     int96 private INFLOW_MAX = 3858024691358;
 
-    /**************************************************************************
-     * Member State Variables
-     *************************************************************************/
+    //  ====== ==== === TREASURY  ====== ==== === //
+    uint256 private _netFlow;
+
+    //  ====== ==== === Member State Variables ====== = //
     Counters.Counter public _memberIds;
 
     enum MembershipStatus {
@@ -39,6 +39,7 @@ contract FluidDao is SuperAppBase, Ownable {
 
     struct Member {
         int96 votingPower;
+        int96 inflow;
         uint256 activePrososals;
         uint256 lastActive;
         MembershipStatus status;
@@ -50,7 +51,7 @@ contract FluidDao is SuperAppBase, Ownable {
         bool voted;
     }
 
-    mapping(address => Member) private _members;
+    mapping(address => Member) public _members;
 
     mapping(address => uint256) private _lastPresentedTimeStamp;
 
@@ -62,14 +63,14 @@ contract FluidDao is SuperAppBase, Ownable {
 
     address[] private _membersArray;
 
-    /**************************************************************************
-     * Proposal State Variables
-     *************************************************************************/
+ 
+    //  ====== ==== === Proposal State Variables ====== ==== === ====== ==== === //
+
     Counters.Counter public _proposalIds;
 
     Counters.Counter public _activeProposal;
 
-    Counters.Counter public _winningProposal;
+
 
     enum ProposalStatus {
         DRAFT,
@@ -94,17 +95,19 @@ contract FluidDao is SuperAppBase, Ownable {
 
     uint256[] public _activeProposalsArray;
 
-    uint256[] public _winingProposalsArray;
-
     mapping(uint256 => Proposal) private _proposals;
 
     mapping(uint256 => mapping(address => int256)) private _votingByProposal;
 
     mapping(address => mapping(uint256 => Vote)) _alreadyVotedbyMember;
 
-    /**************************************************************************
-     * Events
-     *************************************************************************/
+    //  ====== ==== === WINING PROPOSALS ====== ==== ========= ==== ========= ==== ===
+
+    uint256[] public _winingProposalsArray;
+    Counters.Counter public _winningProposal;
+
+    //  ====== ==== === Events ====== ==== ========= ==== ========= ==== ===
+
     event MemberCreated(address indexed member, uint256 _id);
 
     constructor(
@@ -133,17 +136,15 @@ contract FluidDao is SuperAppBase, Ownable {
     /**************************************************************************
      * DAO Mocks Permissions
      *************************************************************************/
-    function addPermision() external {
+    function mockAddPermision() external {
         _addPermission(435678999);
     }
 
-    function revokePermision() external {
+    function mockRevokePermision() external {
         _revokePermission();
     }
 
-    /**************************************************************************
-     * DAO Modifiers
-     *************************************************************************/
+    // ============= DAO Modifiers ============= ============= =============  //
     // #region DAO MOdidiers
     modifier onlyMembers() {
         require(
@@ -154,11 +155,14 @@ contract FluidDao is SuperAppBase, Ownable {
     }
 
     modifier onlyOneProposalperPeriod() {
-        require(
-            _lastPresentedTimeStamp[msg.sender] + PROPOSAL_PERIOD >
-                block.timestamp,
-            "ALREADY_PRESENTED_THIS_WEEK"
-        );
+        console.log(_lastPresentedTimeStamp[msg.sender]);
+        console.log(block.timestamp);
+        console.log(PROPOSAL_PERIOD);
+        // require(
+        //     _lastPresentedTimeStamp[msg.sender] + PROPOSAL_PERIOD >
+        //         block.timestamp,
+        //     "ALREADY_PRESENTED_THIS_PERIOD"
+        // );
         _;
     }
 
@@ -220,9 +224,7 @@ contract FluidDao is SuperAppBase, Ownable {
 
     // #endregion DAO MOdidiers
 
-    /**************************************************************************
-     * Dao Governance
-     *************************************************************************/
+    // =============  Dao Governance  ============= ============= =============  //
 
     /**
      * @notice Returns whether a User is Member of the DAO
@@ -233,8 +235,9 @@ contract FluidDao is SuperAppBase, Ownable {
         return _members[member].status;
     }
 
-    function _addPermission(int96 _votingPower) internal {
-        if (_votingPower > INFLOW_MAX) {
+    function _addPermission(int96 _inflow) internal {
+        int96 _votingPower = _inflow;
+        if (_inflow > INFLOW_MAX) {
             _votingPower = INFLOW_MAX;
         }
 
@@ -242,25 +245,31 @@ contract FluidDao is SuperAppBase, Ownable {
             _totalMembers++;
             _membersArray.push(msg.sender);
         }
-
+        _netFlow = _netFlow + uint256(uint96(_inflow));
         _members[msg.sender] = Member(
             _votingPower,
+            _inflow,
             0,
             0,
             MembershipStatus.ACTIVE,
             false
         );
+        _dispatchFlows();
     }
 
     function _revokePermission() internal {
+        int96 inflow = _members[msg.sender].inflow;
         _members[msg.sender] = Member(
+            0,
             0,
             0,
             block.timestamp,
             MembershipStatus.WENT_AWAY,
             false
         );
+        _netFlow = _netFlow - uint256(uint96(inflow));
         _stopReturningFlow((msg.sender));
+        _dispatchFlows();
     }
 
     function changePeriod(uint256 period) public onlyOwner {
@@ -319,11 +328,12 @@ contract FluidDao is SuperAppBase, Ownable {
         _proposals[_proposalId].activeIndex = indexOfArray;
     }
 
-    function submitNewProposal(string memory _proposalUri)
+    function submitNewProposal(string memory _proposalUri) 
         public
         onlyMembers
         activeProposalsLessThanMax
         onlyOneProposalperPeriod
+        returns (uint256)
     {
         _proposalIds.increment();
         uint256 id = _proposalIds.current();
@@ -343,6 +353,8 @@ contract FluidDao is SuperAppBase, Ownable {
             0,
             addressArray
         );
+
+        return id;
     }
 
     // function widthDrawProposal(Proposal memory _withdrawProposal)
@@ -394,6 +406,7 @@ contract FluidDao is SuperAppBase, Ownable {
         uint256 _totalVotes = _proposal.currentVotes;
         int256 _votingResult = 0;
 
+
         for (uint256 j = 0; j < _totalVotes; j++) {
             address voter = _proposal.membersVoted[j];
             _votingResult =
@@ -403,10 +416,14 @@ contract FluidDao is SuperAppBase, Ownable {
 
         if (_votingResult > 0) {
             _executeResult();
+
         } else {
             _proposals[_proposalId].status = ProposalStatus.REVOKED;
         }
 
+       /////STOP WINING STREAMS TILL DISPATCHING
+       
+       
         ///// CLEANING ACTIVES ARRAY
         uint256 currentProposalIndex = _proposals[_proposalId].activeIndex;
         uint256 lastActiveIndex = _activeProposalsArray[
@@ -417,6 +434,7 @@ contract FluidDao is SuperAppBase, Ownable {
         _activeProposal.decrement();
         _proposals[_proposalId].activeIndex = MAX_ACTIVE_PROPOSAL;
 
+
         /// CHECKING USERS STATUS TO UPDATE STREAMS
         for (uint256 j = 0; j < _totalMembers; j++) {
             Member storage checkMember = _members[_membersArray[j]];
@@ -426,7 +444,20 @@ contract FluidDao is SuperAppBase, Ownable {
                 activeLastPeriod = true;
             }
 
-            if (activeLastPeriod == true) {
+            /// update MemberFlows
+            if (activeLastPeriod == false) {
+                if (oldMemberStatus == MembershipStatus.ACTIVE) {
+                    checkMember.status = MembershipStatus.SLEEPING;
+                    _updateFlowFromActiveToSleep(checkMember);
+                    // delete OutcomingFLow
+                } else if (oldMemberStatus == MembershipStatus.CORE) {
+                    checkMember.status = MembershipStatus.ACTIVE;
+                    //// update flow from 90% to 40%
+                    _updateFlowFromCoreToActive(checkMember);
+                } else {
+                    //  do nothing
+                }
+            } else {
                 if (
                     oldMemberStatus == MembershipStatus.ACTIVE ||
                     oldMemberStatus == MembershipStatus.CORE
@@ -435,16 +466,6 @@ contract FluidDao is SuperAppBase, Ownable {
                 } else if (oldMemberStatus == MembershipStatus.SLEEPING) {
                     checkMember.status = MembershipStatus.ACTIVE;
                     //// launch 40% backstream
-                }
-            } else {
-                if (oldMemberStatus == MembershipStatus.ACTIVE) {
-                    checkMember.status = MembershipStatus.SLEEPING;
-                    // delete OutcomingFLow
-                } else if (oldMemberStatus == MembershipStatus.CORE) {
-                    checkMember.status = MembershipStatus.ACTIVE;
-                    //// update flow from 90% to 40%
-                } else {
-                    //  do nothing
                 }
             }
         }
@@ -495,9 +516,51 @@ contract FluidDao is SuperAppBase, Ownable {
 
     // #endregion draft proposal
 
-    /**************************************************************************
-     * SuperApp Flow Manipulation & callbacks
-     *************************************************************************/
+    // ============= SuperApp Flow Manipulation & callbacks ============= ==========
+    // region superAPP and FlowManipulation
+
+    function _updateFlowFromActiveToSleep(Member memory _checkMember) internal {
+        int96 _currentBackFlow = (_checkMember.inflow * 400) / 1000;
+        _netFlow = _netFlow + uint256(uint96(_currentBackFlow));
+        // STOP FLOW TO DO GET FLOW
+    }
+
+    function _updateFlowFromCoreToActive(Member memory _checkMember) internal {
+        int96 _currentBackFlow = (_checkMember.inflow * 900) / 1000;
+        int96 _newBackFlow = (_checkMember.inflow * 400) / 1000;
+        int96 _updateFlow = _currentBackFlow - _newBackFlow;
+        _netFlow = _netFlow + uint256(uint96(_updateFlow));
+        //// TODO reduce FLOW with _netFlow
+        _dispatchFlows();
+    }
+
+    function _updateFlowFromSleepingToActive(Member memory _checkMember)
+        internal
+    {
+        int96 _newBackFlow = (_checkMember.inflow * 400) / 1000;
+        _netFlow = _netFlow - uint256(uint96(_newBackFlow));
+        //// TODO iNCREASE FLOW with _newBackFlow)
+        _dispatchFlows();
+    }
+
+    function _updateFlowFromActivetoCore(Member memory _checkMember) internal {
+        int96 _currentBackFlow = (_checkMember.inflow * 400) / 1000;
+        int96 _newBackFlow = (_checkMember.inflow * 900) / 1000;
+        int96 _updateFlow = _newBackFlow - _currentBackFlow;
+        _netFlow = _netFlow - uint256(uint96(_updateFlow));
+        //// TODO incfrese FLOW with _updateFlow)
+        _dispatchFlows();
+    }
+
+    function _updateFlowFromSleepingToCore(Member memory _checkMember)
+        internal
+    {
+        int96 _newBackFlow = (_checkMember.inflow * 900) / 1000;
+        _netFlow = _netFlow - uint256(uint96(_newBackFlow));
+        //// TODO reduce FLOW with _netFlow
+    }
+
+    function _dispatchFlows() internal {}
 
     function _createReturningFlow(address member) internal {}
 
@@ -570,9 +633,10 @@ contract FluidDao is SuperAppBase, Ownable {
         return _ctx;
     }
 
-    /**************************************************************************
-     * SuperApp Helpers & modifiers
-     *************************************************************************/
+    // #endregion SuperApp Flow Manipulation & callbacks
+
+    // =============  SuperApp, Helpers & modifiers ============= =============
+    // #region superapp helps
 
     function _isSameToken(ISuperToken superToken) private view returns (bool) {
         return address(superToken) == address(_acceptedToken);
@@ -599,4 +663,6 @@ contract FluidDao is SuperAppBase, Ownable {
         require(_isCFAv1(agreementClass), "RedirectAll: only CFAv1 supported");
         _;
     }
+
+    // #endregion SuperAPP
 }
