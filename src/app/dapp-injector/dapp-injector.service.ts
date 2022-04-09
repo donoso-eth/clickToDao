@@ -333,18 +333,18 @@ export class DappInjectorService implements OnDestroy {
       signer: this.DAPP_STATE.signer!,
     });
 
-    console.log(this.contractMetadata.address)
+ 
 
     await contract.init()
 
-    console.log(contract)
+
 
     this.DAPP_STATE.defaultContract = contract;
 
     const providerNetwork = await this.DAPP_STATE.defaultProvider!.getNetwork();
 
     const networkString = netWorkById(providerNetwork.chainId)?.name as string;
-    console.log(networkString);
+
     this.DAPP_STATE.connectedNetwork = networkString;
     this.store.dispatch(Web3Actions.setSignerNetwork({ network: networkString }));
 

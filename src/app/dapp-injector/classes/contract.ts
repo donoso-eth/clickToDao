@@ -9,16 +9,6 @@ import {
   ITRANSACTION_RESULT,
 } from '../models/models';
 
-interface myfunctions  {
-  greet(overrides?: CallOverrides): Promise<[string]>;
-
-  setGreeting(
-    _greeting: string,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  testpublic(overrides?: CallOverrides): Promise<[string]>;
-};
 
 
 
@@ -44,6 +34,7 @@ export class AngularContract implements OnDestroy {
   }
 
   async init() {
+    console.log('init')
     this._provider = this.contract_init.provider;
     this._network_deployed = this.contract_init.metadata.network;
     this._contract = await new Contract(
@@ -51,7 +42,7 @@ export class AngularContract implements OnDestroy {
       this.contract_init.metadata.abi,
       this.contract_init.signer
     );
-
+      console.log(this._contract)
 
     return this._contract;
   }

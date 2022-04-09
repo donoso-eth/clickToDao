@@ -75,8 +75,19 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
 
       this.deployer_address = this.dapp.signerAddress!;
 
-      this.isMember = await this.defaultContract.contract['isMember'];
-      console.log(this.isMember)
+      const result  = await this.defaultContract.runFunction('isMember',[this.deployer_address]);
+     
+      if(result.payload[0]== 0){
+        this.isMember = false;
+      }
+
+      if(result.payload[0]== 1){
+        this.isMember = true;
+      }
+
+  
+
+      // if (result.payload[0])
 
 
       this.daiContract = new AngularContract({metadata:this.ERC20_METADATA, provider: this.dapp.provider! , signer: this.dapp.signer!})
@@ -122,14 +133,39 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
   }
 
   async stopStream(){
-   
+    console.log('aui ahora')
+    await this.defaultContract.runTransactionFunction('mockRevokePermision',[{ gasPrice: utils.parseUnits('100', 'gwei'), 
+       gasLimit: 2000000 }])
+    
+ 
+     const result  = await this.defaultContract.runFunction('isMember',[this.deployer_address]);console.log(this.isMember)
+     if(result.payload[0]== 0){
+       this.isMember = false;
+     }
+ 
+     if(result.payload[0]== 1){
+       this.isMember = true;
+     }
+     console.log(result)
 
   }
 
   async startStream(){
-    await this.defaultContract.runFunction('mockAddPermision',[])
-    this.isMember = await this.defaultContract.contract['isMember'];
-    console.log(this.isMember)
+    console.log('aui ahora')
+   await this.defaultContract.runTransactionFunction('mockAddPermision',[{ gasPrice: utils.parseUnits('100', 'gwei'), 
+      gasLimit: 2000000 }])
+   
+
+    const result  = await this.defaultContract.runFunction('isMember',[this.deployer_address]);console.log(this.isMember)
+    if(result.payload[0]== 0){
+      this.isMember = false;
+    }
+
+    if(result.payload[0]== 1){
+      this.isMember = true;
+    }
+
+
   }
 
 

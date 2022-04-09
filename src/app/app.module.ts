@@ -20,7 +20,7 @@ import { QuillModule } from 'ngx-quill'
     AppRoutingModule,
     SuperFluidDemoModule,
     BrowserAnimationsModule,
-    DappInjectorModule.forRoot({wallet:'burner', defaultNetwork:'localhost'}),
+    DappInjectorModule.forRoot({wallet:'privKey', defaultNetwork:'localhost'}),
     StoreModule.forRoot({web3: we3ReducerFunction}),
     QuillModule.forRoot()
   ],

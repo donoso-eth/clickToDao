@@ -34,7 +34,7 @@ export const NETWORKS:{[key:string]: INETWORK} = {
   localhost: {
     name: "localhost",
     color: "#666666",
-    chainId: 1337,
+    chainId: 31337,
     blockExplorer: "",
     rpcUrl: "http://" + (window ? window.location.hostname : "localhost") + ":8545",
   },
