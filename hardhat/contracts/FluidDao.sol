@@ -11,8 +11,7 @@ import "hardhat/console.sol";
 
 contract FluidDao is SuperAppBase, Ownable {
     using Counters for Counters.Counter;
-   
-    
+
     ISuperfluid private _host; // host
     IConstantFlowAgreementV1 private _cfa; // the stored constant flow agreement class address
     ISuperToken private _acceptedToken; // accepted token
@@ -23,17 +22,18 @@ contract FluidDao is SuperAppBase, Ownable {
 
     uint256 private PROPOSAL_PERIOD = 7 * 24 * 60 * 60;
     uint256 private MAX_ACTIVE_PROPOSAL = 5;
-
+    int96 private INFLOW_MAX = 3858024691358;
 
     /**************************************************************************
      * Member State Variables
      *************************************************************************/
-     Counters.Counter public _memberIds;
+    Counters.Counter public _memberIds;
 
-      enum MembershipStatus {
+    enum MembershipStatus {
         ACTIVE,
         SLEEPING,
-        WENT_AWAY
+        WENT_AWAY,
+        CORE
     }
 
     struct Member {
@@ -41,6 +41,12 @@ contract FluidDao is SuperAppBase, Ownable {
         uint256 activePrososals;
         uint256 lastActive;
         MembershipStatus status;
+        bool lastVoteBool;
+    }
+
+    struct Vote {
+        bool vote;
+        bool voted;
     }
 
     mapping(address => Member) private _members;
@@ -49,45 +55,49 @@ contract FluidDao is SuperAppBase, Ownable {
 
     mapping(address => uint256) private _proposalsByMember;
 
-    //mapping 
+    //mapping
 
     uint256 private _totalMembers;
-
-
 
     /**************************************************************************
      * Proposal State Variables
      *************************************************************************/
-     Counters.Counter public _proposalIds;
+    Counters.Counter public _proposalIds;
+
+    Counters.Counter public _activeProposal;
 
     enum ProposalStatus {
         DRAFT,
         SUBMITTED,
         CANCEL,
         GRANTED,
-        REVOKED
+        REVOKED,
+        WORTHIT,
+        NOWORTHIT
     }
 
     struct Proposal {
         address sender;
         string proposalUri;
         ProposalStatus status;
-        uint256 currentVotingResult;
         uint256 timestamp;
+        uint256 activeIndex;
+        uint256 currentVotes;
+        uint256 votingResult;
     }
+
+    uint256[] public _activeProposalsArray;
 
     mapping(uint256 => Proposal) private _proposals;
 
-    mapping(uint256 => mapping(address => uint256)) private _votingByProposal;
+    mapping(uint256 => mapping(address => int256)) private _votingByProposal;
 
-    mapping(address => mapping(uint256 => bool)) _alreadyVotedbyMember;
-
+    mapping(address => mapping(uint256 => Vote)) _alreadyVotedbyMember;
 
     /**************************************************************************
      * Events
      *************************************************************************/
-    event MemberCreated (address indexed member, uint256 _id, uint );
-
+    event MemberCreated(address indexed member, uint256 _id);
 
     constructor(
         ISuperfluid host,
@@ -128,7 +138,10 @@ contract FluidDao is SuperAppBase, Ownable {
      *************************************************************************/
     // #region DAO MOdidiers
     modifier onlyMembers() {
-        require(isMember(msg.sender) != MembershipStatus.WENT_AWAY, "NOT_MEMBER");
+        require(
+            isMember(msg.sender) != MembershipStatus.WENT_AWAY,
+            "NOT_MEMBER"
+        );
         _;
     }
 
@@ -146,7 +159,7 @@ contract FluidDao is SuperAppBase, Ownable {
         _;
     }
 
-    modifier onlyActiveProposals(uint256 id) {
+    modifier onlyActiveProposalsCanBeVotedOrUnvoted(uint256 id) {
         require(
             _proposals[id].status == ProposalStatus.SUBMITTED,
             "NOT_SUBMITTED_PROPOSAL"
@@ -158,7 +171,25 @@ contract FluidDao is SuperAppBase, Ownable {
         _;
     }
 
-    modifier onlyReadyToVoteProposals(uint256 id) {
+    modifier onlyProposalsCanBeVotedOnce(uint256 id) {
+        require(
+            _alreadyVotedbyMember[msg.sender][id].voted == false,
+            "ALREADY_VOTED"
+        );
+
+        _;
+    }
+
+    modifier onlyVotedProposalsCanBeUnVoted(uint256 id) {
+        require(
+            _alreadyVotedbyMember[msg.sender][id].voted == true,
+            "PROPOSAL_NOT_VOTED"
+        );
+
+        _;
+    }
+
+    modifier onlyFinishedVotingProposals(uint256 id) {
         require(
             _proposals[id].status == ProposalStatus.SUBMITTED,
             "NOT_SUBMITTED_PROPOSAL"
@@ -167,6 +198,15 @@ contract FluidDao is SuperAppBase, Ownable {
             _proposals[id].timestamp + PROPOSAL_PERIOD < block.timestamp,
             "PROPOSAL_STILL_ACTIVE"
         );
+        _;
+    }
+
+    modifier activeProposalsLessThanMax() {
+        require(
+            _activeProposal.current() < MAX_ACTIVE_PROPOSAL,
+            "ALREADY_MAX_PROPOSALS_RUNNIN"
+        );
+
         _;
     }
 
@@ -186,12 +226,28 @@ contract FluidDao is SuperAppBase, Ownable {
     }
 
     function _addPermission(int96 _votingPower) internal {
-        _members[msg.sender] = Member( _votingPower, 0, block.timestamp,MembershipStatus.ACTIVE);
+        if (_votingPower > INFLOW_MAX) {
+            _votingPower = INFLOW_MAX;
+        }
+
+        _members[msg.sender] = Member(
+            _votingPower,
+            0,
+            block.timestamp,
+            MembershipStatus.ACTIVE,
+            false
+        );
         _createReturningFlow(msg.sender);
     }
 
     function _revokePermission() internal {
-        _members[msg.sender] = Member( 0, 0, block.timestamp,MembershipStatus.WENT_AWAY);
+        _members[msg.sender] = Member(
+            0,
+            0,
+            block.timestamp,
+            MembershipStatus.WENT_AWAY,
+            false
+        );
         _stopReturningFlow((msg.sender));
     }
 
@@ -202,7 +258,7 @@ contract FluidDao is SuperAppBase, Ownable {
     /**************************************************************************
      * Dao proposals
      *************************************************************************/
-    // #region draft proposal
+    // #region proposal
 
     function createDraftProposal(string memory _proposalUri)
         public
@@ -214,8 +270,10 @@ contract FluidDao is SuperAppBase, Ownable {
             msg.sender,
             _proposalUri,
             ProposalStatus.DRAFT,
+            block.timestamp,
+            MAX_ACTIVE_PROPOSAL,
             0,
-            block.timestamp
+            0
         );
 
         _proposalsByMember[msg.sender] = id;
@@ -229,8 +287,10 @@ contract FluidDao is SuperAppBase, Ownable {
             msg.sender,
             _proposalUri,
             ProposalStatus.DRAFT,
+            block.timestamp,
+            MAX_ACTIVE_PROPOSAL,
             0,
-            block.timestamp
+            0
         );
     }
 
@@ -241,59 +301,111 @@ contract FluidDao is SuperAppBase, Ownable {
         public
         onlyMembers
         onlyProposalOwner(_proposalId)
+        activeProposalsLessThanMax
         onlyOneProposalperPeriod
     {
         _lastPresentedTimeStamp[msg.sender] = block.timestamp;
         _proposals[_proposalId].proposalUri = _proposalUri;
         _proposals[_proposalId].status = ProposalStatus.SUBMITTED;
+        _activeProposal.increment();
+        _activeProposalsArray.push(_proposalId);
+        uint256 indexOfArray = _activeProposalsArray.length - 1;
+        _proposals[_proposalId].activeIndex = indexOfArray;
     }
 
-    function submitNewProposal(Proposal memory _newProposal)
+    function submitNewProposal(string memory _proposalUri)
         public
         onlyMembers
+        activeProposalsLessThanMax
         onlyOneProposalperPeriod
     {
         _proposalIds.increment();
-        uint256 id = _proposalIds.current();
-        _proposals[id] = _newProposal;
+        uint256 _proposalId = _proposalIds.current();
+        _lastPresentedTimeStamp[msg.sender] = block.timestamp;
+        _proposals[_proposalId].proposalUri = _proposalUri;
+        _proposals[_proposalId].status = ProposalStatus.SUBMITTED;
+        _activeProposal.increment();
+        _activeProposalsArray.push(_proposalId);
+        uint256 indexOfArray = _activeProposalsArray.length - 1;
+        _proposals[_proposalId].activeIndex = indexOfArray;
     }
 
-    function widthDrawProposal(Proposal memory _withdrawProposal)
+    // function widthDrawProposal(Proposal memory _withdrawProposal)
+    //     public
+    //     onlyMembers
+    // {
+    //     _proposalIds.increment();
+    //     uint256 id = _proposalIds.current();
+    //     _proposals[id] = _withdrawProposal;
+    // }
+
+    function vote(uint256 _proposalId, bool _vote)
         public
         onlyMembers
+        onlyActiveProposalsCanBeVotedOrUnvoted(_proposalId)
+        onlyProposalsCanBeVotedOnce(_proposalId)
     {
-        _proposalIds.increment();
-        uint256 id = _proposalIds.current();
-        _proposals[id] = _withdrawProposal;
+        // _members[msg.sender].activePrososals =
+        //   _members[msg.sender].activePrososals +
+        //   1;
+        _alreadyVotedbyMember[msg.sender][_proposalId].voted = true;
+        _alreadyVotedbyMember[msg.sender][_proposalId].vote = _vote;
+        _proposals[_proposalId].currentVotes++;
+        ///check all votings so far
+        _updateUserVotingWeights();
     }
 
-    function vote(uint256 _proposalId, bool)
+    function unVote(uint256 _proposalId)
         public
         onlyMembers
-        onlyActiveProposals(_proposalId)
+        onlyActiveProposalsCanBeVotedOrUnvoted(_proposalId)
+        onlyVotedProposalsCanBeUnVoted(_proposalId)
     {
-        require(
-            _alreadyVotedbyMember[msg.sender][_proposalId] == false,
-            "PROPOSAL_ALREADY_VOTED"
-        );
-        _members[msg.sender].activePrososals =
-        _members[msg.sender].activePrososals + 1;
-        _alreadyVotedbyMember[msg.sender][_proposalId] = true;
-        _proposals[_proposalId].currentVotingResult =  _proposals[_proposalId].currentVotingResult + uint256(int256(_members[msg.sender].votingPower));
+        _alreadyVotedbyMember[msg.sender][_proposalId].voted = false;
+        _votingByProposal[_proposalId][msg.sender] = 0;
+        _updateUserVotingWeights();
     }
-
-    function unVote() public onlyMembers {}
 
     function calculateResult(uint256 _proposalId)
         public
         onlyMembers
-        onlyReadyToVoteProposals(_proposalId)
+        onlyFinishedVotingProposals(_proposalId)
     {
-        if (_proposals[_proposalId].currentVotingResult > 0){
-                _proposals[_proposalId].status = ProposalStatus.GRANTED;
 
-        } else {
-                _proposals[_proposalId].status = ProposalStatus.REVOKED;
+        
+    }
+
+    function _updateUserVotingWeights() internal {
+        uint256 userActiveProposal = 0;
+        for (uint256 j = 0; j < _activeProposal.current(); j++) {
+            if (
+                _alreadyVotedbyMember[msg.sender][_activeProposalsArray[j]]
+                    .voted == true
+            ) {
+                userActiveProposal++;
+            }
+        }
+
+        uint256 _votingUpdated = uint256(
+            int256(_members[msg.sender].votingPower)
+        ) / userActiveProposal;
+
+        for (uint256 j = 0; j < _activeProposal.current(); j++) {
+            if (
+                _alreadyVotedbyMember[msg.sender][_activeProposalsArray[j]]
+                    .voted == true
+            ) {
+                int256 _votingDirection = -1;
+                if (
+                    _alreadyVotedbyMember[msg.sender][_activeProposalsArray[j]]
+                        .vote
+                ) {
+                    _votingDirection = 1;
+                }
+                _votingByProposal[_activeProposalsArray[j]][msg.sender] =
+                    int256(_votingUpdated) *
+                    _votingDirection;
+            }
         }
     }
 
@@ -308,17 +420,12 @@ contract FluidDao is SuperAppBase, Ownable {
     // #endregion draft proposal
 
     /**************************************************************************
-     * SuperApp Flow Manipulation & callbacks 
+     * SuperApp Flow Manipulation & callbacks
      *************************************************************************/
 
-    function _createReturningFlow (address member) internal {
+    function _createReturningFlow(address member) internal {}
 
-    }
-
-    function _stopReturningFlow(address member) internal {
-
-    }
-
+    function _stopReturningFlow(address member) internal {}
 
     function afterAgreementCreated(
         ISuperToken _superToken,
