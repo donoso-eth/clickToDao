@@ -88,7 +88,15 @@ const mnemonic = () => {
 };
 const defaultNetwork = 'localhost';
 const config: HardhatUserConfig = {
-  solidity: '0.8.4',
+  solidity: {
+    version: "0.8.4",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 1000
+      }
+    }
+  }, 
   paths: {
     artifacts: '../src/assets/artifacts',
   },
@@ -110,6 +118,9 @@ const config: HardhatUserConfig = {
     localhost: {
       url: 'http://localhost:8545',
       chainId: 31337,
+      allowUnlimitedContractSize: true,
+      gas: 12000000,
+      blockGasLimit: 0x1fffffffffffff,
     },
     rinkeby: {
       url: `https://rinkeby.infura.io/v3/${INFURA_ID}`, // <---- YOUR INFURA ID! (or it won't work)
