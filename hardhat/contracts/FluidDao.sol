@@ -133,11 +133,11 @@ contract FluidDao is SuperAppBase, Ownable {
    * DAO Mocks Permissions
    *************************************************************************/
   function mockAddPermision() external {
-    _addPermission(3858024691358);
+    _addPermission(3858024691358,msg.sender);
   }
 
   function mockRevokePermision() external {
-    _revokePermission();
+    _revokePermission(msg.sender);
   }
 
   // ============= DAO Modifiers ============= ============= =============  //
@@ -235,18 +235,19 @@ contract FluidDao is SuperAppBase, Ownable {
     return _members[member].status;
   }
 
-  function _addPermission(int96 _inflow) internal {
+  function _addPermission(int96 _inflow,address sender) internal {
     int96 _votingPower = _inflow;
+ 
     if (_inflow > INFLOW_MAX) {
       _votingPower = INFLOW_MAX;
     }
 
-    if (_members[msg.sender].status == MembershipStatus.NOT_SEEN_YET) {
+    if (_members[sender].status == MembershipStatus.NOT_SEEN_YET) {
       _totalMembers++;
-      _membersArray.push(msg.sender);
+      _membersArray.push(sender);
     }
     _netFlow = _netFlow + uint256(uint96(_inflow));
-    _members[msg.sender] = Member(
+    _members[sender] = Member(
       _votingPower,
       _inflow,
       0,
@@ -257,9 +258,9 @@ contract FluidDao is SuperAppBase, Ownable {
     _dispatchFlows();
   }
 
-  function _revokePermission() internal {
-    int96 inflow = _members[msg.sender].inflow;
-    _members[msg.sender] = Member(
+  function _revokePermission(address sender) internal {
+    int96 inflow = _members[sender].inflow;
+    _members[sender] = Member(
       0,
       0,
       0,
@@ -268,7 +269,7 @@ contract FluidDao is SuperAppBase, Ownable {
       false
     );
     _netFlow = _netFlow - uint256(uint96(inflow));
-    _stopReturningFlow((msg.sender));
+    _stopReturningFlow(sender);
     _dispatchFlows();
   }
 
@@ -579,7 +580,7 @@ contract FluidDao is SuperAppBase, Ownable {
       sender,
       address(this)
     );
-    _addPermission(inFlowRate);
+    _addPermission(inFlowRate,sender);
 
     return _ctx;
   }
@@ -621,7 +622,7 @@ contract FluidDao is SuperAppBase, Ownable {
 
     _cleanUserActiveProposals();
 
-    _revokePermission();
+    _revokePermission(sender);
     return _ctx;
   }
 

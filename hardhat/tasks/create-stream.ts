@@ -31,9 +31,25 @@ task('create-stream', 'creating stream').setAction(async ({}, hre) => {
   const deployer_address = await deployer.getAddress();
   const provider = hre.ethers.provider;
 
+  // await hre.network.provider.request({
+  //   method: "evm_mine",
+  //   params: [],
+  // });
+
+  // let fluidDaoContract  = await new FluidDao__factory(deployer)
+  // .deploy("0xEB796bdb90fFA0f28255275e16936D25d3418603",
+  // "0x49e565Ed1bdc17F3d220f72DF0857C26FA83F873",
+  // "0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f");
+  // await fluidDaoContract.deployed();
+
+
+
+ 
   let deployerNonce = await hre.ethers.provider.getTransactionCount(
     deployer_address
   );
+
+  console.log(deployerNonce);
 
   const contract_path_relative =
     '../src/assets/contracts/fluid_dao_metadata.json';
@@ -45,12 +61,13 @@ task('create-stream', 'creating stream').setAction(async ({}, hre) => {
   console.log(contratMetadata.address);
 
 
-
-
-  const daoHub = FluidDao__factory.connect(
+  const fluidDaoContract = new hre.ethers.Contract(
     contratMetadata.address,
+    contratMetadata.abi,
     deployer
   );
+
+  console.log(fluidDaoContract.address)
 
   console.log(deployer_address);
 
@@ -59,12 +76,23 @@ task('create-stream', 'creating stream').setAction(async ({}, hre) => {
   let day_holder_is_member;
 
   
+  const DaiContract = new hre.ethers.Contract(
+    '0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f',
+    abi_ERC20,
+    deployer
+  );
 
 
-  day_holder_is_member = await daoHub.functions.isMember(deployer_address);
+  const day_balance = await DaiContract['balanceOf'](
+    deployer_address
+   );
+ 
+   console.log(day_balance.toString());
+
+  day_holder_is_member = await fluidDaoContract.functions['isMember'](deployer_address);
   console.log(day_holder_is_member,56);
 
- return
+
   const cfaContract = new hre.ethers.Contract(
     '0x49e565Ed1bdc17F3d220f72DF0857C26FA83F873',
     cfaABI.abi,
@@ -79,26 +107,13 @@ task('create-stream', 'creating stream').setAction(async ({}, hre) => {
 
 
 
-  const DaiContract = new hre.ethers.Contract(
-    '0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f',
-    abi_ERC20,
-    deployer
-  );
-
-  const day_balance = await DaiContract['balanceOf'](
-   deployer_address
-  );
-
-  console.log(day_balance.toString());
-
-
   let ABI = [
     'function createFlow(address token, address receiver, int96 flowRate,bytes ctx)',
   ];
   let iface = new hre.ethers.utils.Interface(ABI);
   const tx = iface.encodeFunctionData('createFlow', [
     '0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f',
-    daoHub.address,
+    fluidDaoContract.address,
     '385802469135802',
     '0x',
   ]);
@@ -113,31 +128,37 @@ task('create-stream', 'creating stream').setAction(async ({}, hre) => {
   );
  let res = await result_callAgree.wait();
     console.log('siiiii siii')
-  day_holder_is_member = await daoHub.functions.isMember(deployer_address);
+  day_holder_is_member = await fluidDaoContract.functions['isMember'](deployer_address);
   console.log(day_holder_is_member);
 
 
 
+  // await fluidDaoContract.mockAddPermision()
+  day_holder_is_member = await fluidDaoContract.functions['isMember'](deployer_address);
+  console.log(day_holder_is_member);
+
+    return;
+
   //// pause the stream
-  // let DeleteFlowAbi = [
-  //   'function createFlow(address token,address sender, address receiver,bytes ctx',
-  // ];
-  // iface = new hre.ethers.utils.Interface(DeleteFlowAbi);
-  // const txDown = iface.encodeFunctionData('deleteFlow', [
-  //   '0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f',
-  //   deployer_address,
-  //   daoHub.address,
-  //   '0x',
-  // ]);
+  let DeleteFlowAbi = [
+    'function deleteFlow(address token,address sender, address receiver,bytes ctx)',
+  ];
+  iface = new hre.ethers.utils.Interface(DeleteFlowAbi);
+  const txDown = iface.encodeFunctionData('deleteFlow', [
+    '0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f',
+    deployer_address,
+    fluidDaoContract.address,
+    '0x',
+  ]);
 
-  //  result_callAgree = await host['callAgreement'](
-  //   '0x49e565Ed1bdc17F3d220f72DF0857C26FA83F873',
-  //   txDown,
-  //   '0x'
-  // );
-  //  res = await result_callAgree.wait();
+   result_callAgree = await host['callAgreement'](
+    '0x49e565Ed1bdc17F3d220f72DF0857C26FA83F873',
+    txDown,
+    '0x'
+  );
+   res = await result_callAgree.wait();
 
-  day_holder_is_member = await daoHub.functions.isMember(deployer_address);
+  day_holder_is_member = await fluidDaoContract.functions['isMember'](deployer_address);
   console.log(day_holder_is_member);
 
 });

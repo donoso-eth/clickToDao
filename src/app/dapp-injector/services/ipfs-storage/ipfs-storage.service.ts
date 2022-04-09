@@ -65,12 +65,12 @@ export class IpfsStorageService {
    * General UPLOADS
    *************************************************************************/
 
-  async addFile(obj:string){
-    console.log('hey')
-  const myFile = new File([obj], 'image.png');
-  console.log('hey 2')
+  async addFile(myFile:File){
+
+
+
   const storage = new Web3Storage({ token:environment.WEB3_STORAGE_KEY})
-  console.log('hey 3')
+ 
   const cid = await storage.put([myFile])
 
    console.log(cid)
