@@ -67,8 +67,8 @@ task('create-stream', 'creating stream').setAction(async ({}, hre) => {
     deployer
   );
 
-  console.log(fluidDaoContract.address)
-
+const result = await fluidDaoContract['owner']()
+    return
   console.log(deployer_address);
 
 

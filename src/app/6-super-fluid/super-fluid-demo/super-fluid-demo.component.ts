@@ -1,6 +1,6 @@
-import { Component, Inject, OnInit } from '@angular/core';
-
-import { Contract, ethers, Signer, utils } from 'ethers';
+  import { Component, Inject, OnInit } from '@angular/core';
+import { Contract, ethers, providers, Signer, utils } from 'ethers';
+import { abi_ERC20 } from 'src/app/dapp-injector/abis/ERC20_ABI';
 
 import {
   BlockWithTransactions,
@@ -19,8 +19,8 @@ import {
 import { Store } from '@ngrx/store';
 import { first, firstValueFrom } from 'rxjs';
 import { DialogService, NotifierService } from '../../dapp-components';
-import { uniswap_abi } from 'src/app/dapp-injector/helpers/uniswap_abi';
 import { FormControl, Validators } from '@angular/forms';
+import { JsonRpcServer } from 'hardhat/types';
 
 @Component({
   selector: 'super-fluid-demo',
@@ -29,7 +29,7 @@ import { FormControl, Validators } from '@angular/forms';
 })
 export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit {
 
-
+  isMember = false;
   walletBalance!: IBALANCE;
   contractBalance!: IBALANCE;
   contractHeader!: any;
@@ -49,6 +49,10 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
   dollarExchange!: number;
   balanceDollar!: number;
   private _dollarExchange!: number;
+  daiContract!: AngularContract;
+  myBalance!: number;
+  niceBalance!: string;
+  ERC20_METADATA:any;
 
   constructor(
     private dialogService: DialogService,
@@ -58,7 +62,12 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
     store: Store<Web3State>
   ) {
     super(dapp, store);
+    this.ERC20_METADATA = {
+      abi:abi_ERC20,
+      address:'0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f',
+      network: 'localhost'
   }
+}
 
   async onChainStuff() {
     try {
@@ -66,29 +75,37 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
 
       this.deployer_address = this.dapp.signerAddress!;
 
+      this.isMember = await this.defaultContract.contract['isMember'];
+      console.log(this.isMember)
 
+
+      this.daiContract = new AngularContract({metadata:this.ERC20_METADATA, provider: this.dapp.provider! , signer: this.dapp.signer!})
+      await this.daiContract.init()
+
+      this.myBalance = +((await this.daiContract.contract['balanceOf'](this.deployer_address )).toString())
+      this.niceBalance = (this.myBalance/(10**18)).toFixed(4)
     
-        this.defaultContract.contract.on('NewGravatar', (args) => {
-          let payload;
-          if (typeof args == 'object') {
-            payload = JSON.stringify(args);
-          } else {
-            payload = args.toString();
-          }
-          console.log(payload)
-        });
+        // this.defaultContract.contract.on('NewGravatar', (args) => {
+        //   let payload;
+        //   if (typeof args == 'object') {
+        //     payload = JSON.stringify(args);
+        //   } else {
+        //     payload = args.toString();
+        //   }
+        //   console.log(payload)
+        // });
  
 
-        this.defaultContract.contract.on('UpdatedGravatar', (args,arg2,arg3,arg4) => {
-          let payload;
-          console.log(args,arg2,arg3,arg4)
-          if (typeof args == 'object') {
-            payload = JSON.stringify(args);
-          } else {
-            payload = args.toString();
-          }
-          console.log(payload)
-        });
+        // this.defaultContract.contract.on('UpdatedGravatar', (args,arg2,arg3,arg4) => {
+        //   let payload;
+        //   console.log(args,arg2,arg3,arg4)
+        //   if (typeof args == 'object') {
+        //     payload = JSON.stringify(args);
+        //   } else {
+        //     payload = args.toString();
+        //   }
+        //   console.log(payload)
+        // });
  
 
 
@@ -104,62 +121,33 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
     }
   }
 
-  async updateGravatarName() {
-    if (this.nameCtrl.invalid){
-      alert("please input name")
-      return
-    }
-    const name = this.nameCtrl.value;
-    const result = await this.defaultContract.runFunction('updateGravatarName', [
-      name,{ gasPrice: utils.parseUnits('100', 'gwei'), 
-      gasLimit: 2000000 }
-    ]);
-    console.log(result);
+  async stopStream(){
+   
+
   }
 
-  async updateGravatarImage() {
-    if (this.imageCtrl.invalid){
-      alert("please input image")
-      return
-    }
-    const image = this.imageCtrl.value;
-    const result = await this.defaultContract.runFunction('updateGravatarImage', [
-     image,{ gasPrice: utils.parseUnits('100', 'gwei'), 
-     gasLimit: 2000000 }
-    ]);
+  async startStream(){
+    await this.defaultContract.runFunction('mockAddPermision',[])
+    this.isMember = await this.defaultContract.contract['isMember'];
+    console.log(this.isMember)
+  }
+
+
+  // async updateGravatarImage() {
+  //   if (this.imageCtrl.invalid){
+  //     alert("please input image")
+  //     return
+  //   }
+  //   const image = this.imageCtrl.value;
+  //   const result = await this.defaultContract.runFunction('updateGravatarImage', [
+  //    image,{ gasPrice: utils.parseUnits('100', 'gwei'), 
+  //    gasLimit: 2000000 }
+  //   ]);
   
-  }
-
-  async createGravatar() {
-    if (this.nameCtrl.invalid){
-      alert("please input name")
-      return
-    }
-    const name = this.imageCtrl.value;
-
-
-    if (this.imageCtrl.invalid){
-      alert("please input image")
-      return
-    }
-    const image = this.imageCtrl.value;
+  // }
 
 
 
-
-
-    const result = await this.defaultContract.runFunction('createGravatar', [
-      name,image
-    ]);
-    console.log(result);
-  }
-
-  async getGravatar() {
-    const result = await this.defaultContract.runFunction('getGravatar', [
-      this.dapp.signerAddress,
-    ]);
-    console.log(result);
-  }
 
   async doFaucet() {
     this.blockchain_is_busy = true;
@@ -209,7 +197,7 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
 
 
   override async hookChainIsLoading() {
-    console.log('is loading');
+    
   }
 
 

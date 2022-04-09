@@ -40,7 +40,7 @@ export class AngularContract implements OnDestroy {
       signer: Signer;
     }
   ) {
-    this.init();
+ 
   }
 
   async init() {

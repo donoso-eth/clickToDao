@@ -1,8 +1,9 @@
 
-  <h2>💃💃💃 Your First Smart Contract and DAPP 👏 👏 👏</h2>
+  <div style="text-align:center">
+  <h2>💃💃💃   Your FLUID DAO  👏 👏 👏</h2>
   <div style="max-width: 800px; width: 90vw; margin: auto">
     <mat-tab-group mat-align-tabs="center">
-      <mat-tab label="Smart Contract">
+      <mat-tab  label="Owner">
         <p style="text-align: center; font-size: 20px">
     
         </p>
@@ -37,76 +38,59 @@
  
             <br />
           </p>
-          <p>
-            <br />
-            <button
-              mat-raised-button
-              color="accent"
-              style="margin: 10px"
-              (click)="createGravatar()"
-              class="btn_send"
-            >
-              Create Gravatar
-            </button>
-            <button
-              mat-raised-button
-              color="accent"
-              style="margin: 10px"
-              (click)="getGravatar()"
-              class="btn_send"
-            >
-              Get Gravatar
-            </button>
-            
-          </p>
-          <p style="margin: 10px;border-top:1px solid grey">
-     
-            <button
-              mat-raised-button
-              color="accent"
-              style="margin: 10px"
-              (click)="updateGravatarName()"
-              class="btn_send"
-            >
-              Update Name
-            </button>
-              
-            <button
-              mat-raised-button
-              color="accent"
-              style="margin: 10px"
-              (click)="updateGravatarImage()"
-              class="btn_send"
-            >
-              Update Image
-            </button>
-            <br />
-          </p>
-          <p style="margin: 10px;border-top:1px solid grey">
-     
-        
-              
-            <button
-              mat-raised-button
-              color="accent"
-              style="margin: 10px"
-              class="btn_send"
-            >
-            Query
-            </button>
-            <br />
-          </p>
+   
         </div>
       </mat-tab>
-      <mat-tab style="height: fit-content; text-align: left" label="BlockChain">
-        <br />
-        <br />
+      <mat-tab style="height: fit-content; text-align: left" label="DashBoard">
+
+ 
+          <div style="line-height: 35px; font-size: 20px;" *ngIf="isMember==false" class="FollowModule">
+            <div>
+              <span>The subscription is with DAIx Test Token<br>
+                0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f
+                <br>
+                <a href="https://mumbai.polygonscan.com/address/0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f">View on Polygon
+                  Scan</a>
+              </span>
+      
+              <p>Your Current Balance :<span style="font-weight:bold;color:var(--twitter)"> {{niceBalance}} </span> </p>
+              <div *ngIf="myBalance == 0">
+                <p>In order to Start the stream please visit
+                  <a href="https://app.superfluid.finance/">Superfluid Dashboard</a> and then:<br>
+                  - Ask for test tokens <br>
+                  - Wrap your Dai to Daix tolens <br>
+                  - Once the transactionis completed, please click to refresh to see your balance
+                </p>
+              </div>
+              <h3 style="color:var(--twitter)" class="thirdTitle">
+                You have not yet subscribed, please start the stream subscription in order to support the amazing creators so
+                they continue producing amazing content
+              </h3>
+            </div>
+            <button mat-raised-button color="accent"style="margin-top:30px" (onClick)="startStream()" >Start Stream</button>
+      
+      
+      
+      
+
+        </div>
+
+        <div *ngIf="isMember==true">
+          <button mat-raised-button color="accent" style="margin-top:30px" (onClick)="stopStream()" >Stop Stream</button>
+        </div>
+
       </mat-tab>
+
+      <mat-tab style="height: fit-content; text-align: left" label="Active Proposals">
+        
+      </mat-tab>
+
     </mat-tab-group>
   </div>
-  <div *ngIf="loading_contract == 'error'">
+  <div *ngIf="blockchain_status == 'fail-to-connect-network'  ">
     <h2>
       ERROR, check please if a developper node or testnet is available and the
       contract has been compiled and deployed
     </h2>
   </div>
+</div>

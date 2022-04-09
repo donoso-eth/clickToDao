@@ -86,7 +86,7 @@ const mnemonic = () => {
   }
   return '';
 };
-const defaultNetwork = 'mumbai';
+const defaultNetwork = 'localhost';
 const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.4",

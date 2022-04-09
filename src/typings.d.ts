@@ -10,3 +10,5 @@ declare module "*.json" {
 
 declare module '@download/blockies'
 declare module 'web3.storage'
+declare module 'quill'
+declare module 'quill-image-resize-module'

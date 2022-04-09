@@ -260,10 +260,11 @@ export class DappInjectorService implements OnDestroy {
 
       case 'privKey':
         let privateWallet: Wallet;
-        let privKey = ''; //environment.privKey
+        let privKey = '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'; //environment.privKey
         privateWallet = new Wallet(privKey);
         this.DAPP_STATE.signer = await privateWallet.connect(this.DAPP_STATE.defaultProvider);
         this.DAPP_STATE.signerAddress = await this.DAPP_STATE.signer.getAddress()
+        console.log(this.DAPP_STATE)
         this.contractInitialization();
         break;
     }
@@ -331,6 +332,12 @@ export class DappInjectorService implements OnDestroy {
       provider: this.DAPP_STATE.defaultProvider!,
       signer: this.DAPP_STATE.signer!,
     });
+
+    console.log(this.contractMetadata.address)
+
+    await contract.init()
+
+    console.log(contract)
 
     this.DAPP_STATE.defaultContract = contract;
 

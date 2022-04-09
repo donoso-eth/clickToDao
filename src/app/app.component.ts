@@ -29,6 +29,11 @@ export class AppComponent {
 
   }
 
+  content(obj:any){
+    console.log(obj)
+
+  }
+
   addFile(){
     this.ipfs.addFile(this.image_src)
   }
