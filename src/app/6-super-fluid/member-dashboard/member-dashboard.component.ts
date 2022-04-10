@@ -55,18 +55,19 @@ export class MemberDashboardComponent extends DappBaseComponent {
 
   async startStream() {
 
+    console.log(this.dapp.connectedNetwork)
     if(this.dapp.connectedNetwork == 'localhost'){
       this.mockStartStream()
       return
     }
 
-    if (this.myBalance == 0) {
-      this.alertService.showAlertERROR(
-        'OOPS',
-        'to Start the subscription uyou require some tokens'
-      );
-      return;
-    }
+    // if (this.myBalance == 0) {
+    //   this.alertService.showAlertERROR(
+    //     'OOPS',
+    //     'to Start the subscription uyou require some tokens'
+    //   );
+    //   return;
+    // }
 
     try {
       this.store.dispatch(Web3Actions.chainBusy({ status: true }));

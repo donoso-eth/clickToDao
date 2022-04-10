@@ -25,7 +25,7 @@ export class CreateProposalComponent extends DappBaseComponent {
     super(dapp,store)
 
     this.proposalForm = this.formBuilder.group({
-      titleCtrl: ['', [Validators.required, Validators.maxLength(20)]],
+      titleCtrl: ['', [Validators.required]],
       descriptionCtrl: [
         '',
         [Validators.required],
