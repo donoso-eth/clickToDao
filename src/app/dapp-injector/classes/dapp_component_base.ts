@@ -9,7 +9,7 @@ import { NETWORK_STATUS, web3Selectors } from '../store';
 
 @Directive()
 export class DappBaseComponent implements OnDestroy, AfterViewInit {
-  private destroyHooks: Subject<void> = new Subject();
+  public destroyHooks: Subject<void> = new Subject();
 
   ////// Public Available
   blockchain_is_busy: boolean = true;

@@ -2,14 +2,14 @@
     <div class="sc-nVkyK glXHDA" style="height: 360px; flex-grow: 1;">
         <div class="Title_wrapper__1M0ZE">
             <h1 class="Title_h4__2Vakp Title_medium__zzETA Title_left__S2mjG Title_default__1PPrv"
-                data-cy="your_balance_in">Your balance in USD</h1>
+                data-cy="your_balance_in">Contract Liquidity in USD</h1>
         </div>
         <div class="Title_wrapper__1M0ZE">
             <h1 class="Title_h1__3XnJ3 Title_medium__zzETA Title_left__S2mjG Title_default__1PPrv"
                 data-cy="total_balance" style="font-variant-numeric: tabular-nums;">
-                <div class="sc-fbyfCU eXneDc">$<span class="sc-gsNilK fWhdln">1000</span><span
-                        class="sc-GEbAx hRzVdO">.</span><span class="sc-bXTejn glsbck">94</span><span
-                        class="sc-eGRUor edJfyB">1897</span></div>
+                <div class="sc-fbyfCU eXneDc">$<span class="sc-gsNilK fWhdln">{{niceBalance}}</span><span
+                        class="sc-GEbAx hRzVdO">.</span><span class="sc-bXTejn glsbck">{{twoDec}}</span><span
+                        class="sc-eGRUor edJfyB">{{fourDec}}</span></div>
             </h1>
         </div>
         <div class="sc-ctqQKy cnURre" style="display: flex;">
@@ -37,7 +37,7 @@
                     <div class="sc-bilyIR gkdEmo"><span class="sc-XxNYO eTDsSE">
                             <div class="Title_wrapper__1M0ZE">
                                 <h1 class="Title_h5__19dLf Title_medium__zzETA Title_right__ToG9D Title_default__1PPrv"
-                                    data-cy="balances-DAIx-value" style="font-variant-numeric: tabular-nums;">$1000.94
+                                    data-cy="balances-DAIx-value" style="font-variant-numeric: tabular-nums;">${{niceBalance}}.{{twoDec}}
                                 </h1>
                             </div>
                         </span></div>
@@ -53,7 +53,7 @@
                                 <div class="sc-jHkVzv jHSdmZ">
                                     <div class="Title_wrapper__1M0ZE">
                                         <h1 class="Title_h2__DJAA2 Title_medium__zzETA Title_left__S2mjG Title_default__1PPrv"
-                                            style="font-variant-numeric: tabular-nums;">$1000.94</h1>
+                                            style="font-variant-numeric: tabular-nums;">${{niceBalance}}.{{twoDec}}</h1>
                                     </div>
                                     <div class="sc-ilfuhL sc-eGPXGI jeclXO krhdVj" style="margin-left: 8px;"><img
                                             src="https://assets.superfluid.finance/tokens/dai/icon.svg" alt="daix-img"
@@ -72,7 +72,7 @@
                                             <h1
                                                 class="Title_h2__DJAA2 Title_medium__zzETA Title_left__S2mjG Title_default__1PPrv">
                                                 <div class="sc-jvvksu jcGDKI"><span data-cy="total_flow_rate"
-                                                        style="font-variant-numeric: tabular-nums;">$0.00</span><span></span>
+                                                        style="font-variant-numeric: tabular-nums;">${{monthlyInflow}} </span><span></span>
                                                 </div>
                                             </h1>
                                         </div>
@@ -87,7 +87,7 @@
                                             <div class="Title_wrapper__1M0ZE">
                                                 <h1 class="Title_h5__19dLf Title_medium__zzETA Title_left__S2mjG Title_default__1PPrv"
                                                     data-cy="total_incomming"
-                                                    style="font-variant-numeric: tabular-nums;">+$0.00</h1>
+                                                    style="font-variant-numeric: tabular-nums;">+${{monthlyInflow}}</h1>
                                             </div>
                                         </span><span class="sc-eicpiI bkdREN">
                                             <div class="Title_wrapper__1M0ZE">
@@ -144,11 +144,13 @@
                         <div class="Title_wrapper__1M0ZE">
                             <h1 class="Title_h2__DJAA2 Title_medium__zzETA Title_left__S2mjG Title_default__1PPrv">
                                 <div class="sc-jvvksu jcGDKI"><span data-cy="total_flow_rate"
-                                        style="font-variant-numeric: tabular-nums;">$0.00</span><span></span></div>
+                                        style="font-variant-numeric: tabular-nums;">${{monthlyInflow}} </span><span></span></div>
                             </h1>
                         </div>
                     </span></div>
-                <div class="sc-kHxTfl evtMrq">
+
+                    <div *ngFor="let members of members"></div>
+                <div  *ngIf="false" class="sc-kHxTfl evtMrq">
                     <div class="Title_wrapper__1M0ZE">
                         <h1 class="Title_h4__2Vakp Title_medium__zzETA Title_left__S2mjG Title_default__1PPrv">Streaming
                             in &amp; out</h1>

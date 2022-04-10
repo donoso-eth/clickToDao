@@ -14,7 +14,7 @@ const GET_QUERY = `
         id
         symbol
       }
-	    createdAtTimestamp
+      createdAtTimestamp
 	    updatedAtTimestamp
 	    currentFlowRate
 	    streamedUntilUpdatedAt
@@ -44,7 +44,8 @@ export class GraphQlService {
     variables,
     }))
 
-    console.log((posts.data))
+    return posts.data
+
 
     // this.querySubscription = this.postsQuery.valueChanges.subscribe(({ data, loading }) => {
     //   this.loading = loading;

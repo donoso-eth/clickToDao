@@ -31,6 +31,8 @@
         </div>
 
         <div *ngIf="isMember==true">
-          <button mat-raised-button color="accent" style="margin-top:30px" (click)="stopStream()" >Stop Stream</button>
+          <button mat-raised-button color="accent" style="margin-top:30px" (click)="stopStream()" >Stop Dao Membership</button>
+          <br>
           <button mat-raised-button color="accent" style="margin-top:30px" (click)="createProposal()" >Create Proposal</button>
         </div>
+        <create-proposal (close)="viewState = 'menu'" *ngIf="viewState == 'create-proposal'"></create-proposal>

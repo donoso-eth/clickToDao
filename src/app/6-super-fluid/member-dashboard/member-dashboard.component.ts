@@ -20,6 +20,7 @@ import { IpfsStorageService } from 'src/app/dapp-injector/services/ipfs-storage/
 export class MemberDashboardComponent extends DappBaseComponent {
   myBalance: number;
   isMember = false;
+  viewState: 'not-connected' | 'menu' | 'create-proposal'  = 'not-connected' ;
   constructor(
     public formBuilder: FormBuilder,
     dapp: DappInjectorService,
@@ -46,13 +47,13 @@ export class MemberDashboardComponent extends DappBaseComponent {
     try {
       this.store.dispatch(Web3Actions.chainBusy({ status: true }));
 
-      const contractAddress = this.dapp.defaultContract.address;
+      const contractAddress = this.dapp.defaultContract!.address;
 
       const flowRate = '3858024691358';
 
       const sf = await Framework.create({
         networkName: 'mumbai',
-        provider: this.dapp.provider,
+        provider: this.dapp.provider!,
       });
 
       //const encodedData = utils.defaultAbiCoder.encode(['uint256'], [1]);
@@ -159,4 +160,10 @@ View Your Stream At: https://app.superfluid.finance/dashboard/${contractAddress}
 
     return false;
   }
+
+  createProposal(){
+    this.viewState = 'create-proposal';
+  }
+
+
 }
