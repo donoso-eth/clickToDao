@@ -13,6 +13,7 @@ import { QuillModule } from 'ngx-quill'
 import SuperFluidMetadata from '../../assets/contracts/fluid_dao_metadata.json';
 import { CreateProposalComponent } from './create-proposal/create-proposal.component';
 import { OnlyOwnerComponent } from './only-owner/only-owner.component';
+import { MemberDashboardComponent } from './member-dashboard/member-dashboard.component';
 export const contractMetadata = new InjectionToken<ICONTRACT_METADATA>('contractMetadata')
 
 export const contractProvider= {provide: 'contractMetadata', useValue:SuperFluidMetadata };
@@ -24,6 +25,7 @@ export const contractProvider= {provide: 'contractMetadata', useValue:SuperFluid
     SuperFluidDemoComponent,
     CreateProposalComponent,
     OnlyOwnerComponent,
+    MemberDashboardComponent,
 
   ],
   imports: [

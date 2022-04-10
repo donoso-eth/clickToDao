@@ -28,7 +28,9 @@ export class DappBaseComponent implements OnDestroy, AfterViewInit {
 
   async hookFailedtoConnectNetwork() {}
 
-  async hookWalletNotConnected() {}
+  async hookWalletNotConnected() {
+  
+  }
 
   async hookContractConnected() {}
 
@@ -62,6 +64,15 @@ export class DappBaseComponent implements OnDestroy, AfterViewInit {
       .subscribe(() => {
         this.hookFailedtoConnectNetwork();
       });
+
+          //////  FAIL TO CONNECT TO WALLETNETWORK
+    this.store
+    .pipe(web3Selectors.hookWalletNotConnected)
+    .pipe(takeUntil(this.destroyHooks))
+    .subscribe(() => {
+      this.hookWalletNotConnected();
+    });
+
 
     //////  WALLET IS CONNECTED TO CONTRACT
     this.store

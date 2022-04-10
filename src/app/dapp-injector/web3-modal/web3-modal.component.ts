@@ -234,8 +234,7 @@ export class Web3ModalComponent implements AfterViewInit {
 
   createProviderHooks(provider: any) {
 
-  console.log(' I am doing hooks')
-    console.log(provider)
+ 
     // Subscribe to accounts change
     provider.on('accountsChanged', (accounts: string[]) => {
       this.onConnect.emit(provider);
@@ -302,7 +301,7 @@ export class Web3ModalComponent implements AfterViewInit {
           script.id = mapy.name;
           script.src = mapy.scriptTag;
           script.onload = () => {
-            console.log(mapy.name);
+          
             resolve();
           };
           this.payload.document.body.appendChild(script);

@@ -198,16 +198,20 @@ export class DappInjectorService implements OnDestroy {
     switch (this.dappConfig.wallet) {
       case 'wallet':
         const walletResult = await this.walletInitialization();
-        if (walletResult == false) {
-          return;
-        }
+        // console.log(walletResult)
+        // if (walletResult !== false) {
+        //   this.DAPP_STATE.signer = walletResult.signer;
+        //   this.DAPP_STATE.defaultProvider = walletResult.provider;
+          
+          
+       
+        // }
 
-        this.DAPP_STATE.signer = walletResult.signer;
-        this.DAPP_STATE.defaultProvider = walletResult.provider;
+       
 
         ///// create web-modal/hoos for connection/disconection .etcc.....
         this.webModal = new Web3ModalComponent({ document: this.document }, this.store);
-
+   
         await this.webModal.loadWallets();
         this.webModal.onConnect.pipe(takeUntil(this.destroyHooks)).subscribe(async (walletConnectProvider) => {
           this.store.dispatch(Web3Actions.chainStatus({ status: 'fail-to-connect-network' }));
@@ -307,6 +311,9 @@ export class DappInjectorService implements OnDestroy {
         const providerNetwork = metamaskProvider && (await metamaskProvider.getNetwork());
         const metamaskSigner = await metamaskProvider.getSigner();
         this.DAPP_STATE.signerAddress = await metamaskSigner.getAddress()
+        this.DAPP_STATE.signer = metamaskSigner
+        this.DAPP_STATE.defaultProvider = metamaskProvider;
+        this.contractInitialization();
         return {
           signer: metamaskSigner,
           provider: metamaskProvider,

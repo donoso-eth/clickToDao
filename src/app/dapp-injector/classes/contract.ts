@@ -34,7 +34,7 @@ export class AngularContract implements OnDestroy {
   }
 
   async init() {
-    console.log('init')
+ 
     this._provider = this.contract_init.provider;
     this._network_deployed = this.contract_init.metadata.network;
     this._contract = await new Contract(
@@ -42,7 +42,7 @@ export class AngularContract implements OnDestroy {
       this.contract_init.metadata.abi,
       this.contract_init.signer
     );
-      console.log(this._contract)
+   
 
     return this._contract;
   }
@@ -172,7 +172,7 @@ export class AngularContract implements OnDestroy {
       }
       state = myFunction_filter[0].stateMutability;
     }
-    console.log('mystate: '+ state)
+  
     if (state == 'pure' || state == 'view') {
       return await this.runContractFunction(functionName, args);
     } else {
