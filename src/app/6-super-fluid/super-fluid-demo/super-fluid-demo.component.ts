@@ -69,7 +69,7 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
     this.ERC20_METADATA = {
       abi:abi_ERC20,
       address:'0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f',
-      network: 'mumbai'
+      network: 'localhost'
   }
 }
 
@@ -81,8 +81,7 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
    
       const owner = await this.defaultContract.runFunction('owner',[]);
       
-      console.log(owner.payload[0])
-      console.log(this.dapp.signerAddress)
+     
       if (this.dapp.signerAddress == owner.payload[0]){
         this.isOwner = true;
       }
@@ -100,7 +99,7 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
       this.deployer_address = this.dapp.signerAddress!;
 
       const result  = await this.defaultContract.runFunction('isMember',[this.deployer_address]);
-     console.log(result)
+   
 
       if(result.payload[0]== 0){
         this.isMember = false;
@@ -252,7 +251,6 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
   override async hookWalletNotConnected(): Promise<void> {
       console.log('not connected')
       console.log(this.viewState)
-      this.store.dispatch(Web3Actions.chainBusy({ status: false }));
   }
 
 

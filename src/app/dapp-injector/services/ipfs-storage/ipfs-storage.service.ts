@@ -22,7 +22,11 @@ declare global {
 export class IpfsStorageService {
   ipfs: any;
   loading = true;
-  constructor(  @Inject(DOCUMENT) private readonly document: any) {}
+  storage: any;
+  constructor(  @Inject(DOCUMENT) private readonly document: any) {
+    console.log('ipfs service')
+    this.storage = new Web3Storage({ token:environment.WEB3_STORAGE_KEY})
+  }
 
   /**************************************************************************
    * NFT UPLOADS
@@ -69,12 +73,19 @@ export class IpfsStorageService {
 
 
 
-  const storage = new Web3Storage({ token:environment.WEB3_STORAGE_KEY})
+  this.storage = new Web3Storage({ token:environment.WEB3_STORAGE_KEY})
  
-  const cid = await storage.put([myFile])
+  const cid = await this.storage.put([myFile])
 
    console.log(cid)
    return cid
+  }
+
+  async getWeb3Storage(cid){
+  const res =   await this.storage.get(cid)
+  console.log(`Got a response! [${res.status}] ${res.statusText}`)
+  const files = await res.files()
+  return files[0]
   }
 
 
@@ -87,6 +98,10 @@ export class IpfsStorageService {
     const responseBuffer = Buffer.concat(responseBufferChunks)
     return responseBuffer
 
+  }
+
+  downloadFile(){
+    
   }
 
 
@@ -132,6 +147,7 @@ export class IpfsStorageService {
   }
 
    async init() {
+   
     if (this.loading == true) {
       await this.loadTagToPromise({
         name: 'jsoneditor_css',

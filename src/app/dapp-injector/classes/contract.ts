@@ -157,6 +157,7 @@ export class AngularContract implements OnDestroy {
       notification_message.success = true;
       return { msg: notification_message, payload: result };
     } catch (error: any) {
+      console.log(error)
       notification_message.error_message = error.toString();
       return { msg: notification_message };
     }

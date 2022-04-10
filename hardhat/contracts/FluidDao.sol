@@ -66,7 +66,7 @@ contract FluidDao is SuperAppBase, Ownable {
 
   Counters.Counter public _proposalIds;
 
-  Counters.Counter public _activeProposal;
+
 
   enum ProposalStatus {
     DRAFT,
@@ -90,6 +90,7 @@ contract FluidDao is SuperAppBase, Ownable {
   }
 
   uint256[] public _activeProposalsArray;
+  uint256 public _activeProposal;
 
   mapping(uint256 => Proposal) public _proposals;
 
@@ -155,9 +156,7 @@ contract FluidDao is SuperAppBase, Ownable {
   }
 
   modifier onlyOneProposalperPeriod() {
-    console.log(_lastPresentedTimeStamp[msg.sender]);
-    console.log(block.timestamp);
-    console.log(PROPOSAL_PERIOD);
+
     // require(
     //     _lastPresentedTimeStamp[msg.sender] + PROPOSAL_PERIOD >
     //         block.timestamp,
@@ -184,10 +183,10 @@ contract FluidDao is SuperAppBase, Ownable {
   }
 
   modifier onlyProposalsCanBeVotedOnce(uint256 id) {
-    require(
-      _alreadyVotedbyMember[msg.sender][id].voted == false,
-      "ALREADY_VOTED"
-    );
+    // require(
+    //   _alreadyVotedbyMember[msg.sender][id].voted == false,
+    //   "ALREADY_VOTED"
+    // );
 
     _;
   }
@@ -206,18 +205,18 @@ contract FluidDao is SuperAppBase, Ownable {
       _proposals[id].status == ProposalStatus.SUBMITTED,
       "NOT_SUBMITTED_PROPOSAL"
     );
-    require(
-      _proposals[id].timestamp + PROPOSAL_PERIOD < block.timestamp,
-      "PROPOSAL_STILL_ACTIVE"
-    );
+    // require(
+    //   _proposals[id].timestamp + PROPOSAL_PERIOD < block.timestamp,
+    //   "PROPOSAL_STILL_ACTIVE"
+    // );
     _;
   }
 
   modifier activeProposalsLessThanMax() {
-    require(
-      _activeProposal.current() < MAX_ACTIVE_PROPOSAL,
-      "ALREADY_MAX_PROPOSALS_RUNNIN"
-    );
+    // require(
+    //   _activeProposal.current() < MAX_ACTIVE_PROPOSAL,
+    //   "ALREADY_MAX_PROPOSALS_RUNNIN"
+    // );
 
     _;
   }
@@ -321,7 +320,7 @@ contract FluidDao is SuperAppBase, Ownable {
     _lastPresentedTimeStamp[msg.sender] = block.timestamp;
     _proposals[_proposalId].proposalUri = _proposalUri;
     _proposals[_proposalId].status = ProposalStatus.SUBMITTED;
-    _activeProposal.increment();
+    _activeProposal++;
     _activeProposalsArray.push(_proposalId);
     uint256 indexOfArray = _activeProposalsArray.length - 1;
     _proposals[_proposalId].activeIndex = indexOfArray;
@@ -338,7 +337,7 @@ contract FluidDao is SuperAppBase, Ownable {
     uint256 id = _proposalIds.current();
     address[] memory addressArray;
 
-    _activeProposal.increment();
+    _activeProposal++;
     _activeProposalsArray.push(id);
     uint256 indexOfArray = _activeProposalsArray.length - 1;
 
@@ -411,6 +410,7 @@ contract FluidDao is SuperAppBase, Ownable {
     }
 
     _proposal.votingResult = _votingResult;
+   
 
     if (_votingResult > 0) {
       _proposals[_proposalId].status = ProposalStatus.GRANTED;
@@ -426,11 +426,11 @@ contract FluidDao is SuperAppBase, Ownable {
     ///// CLEANING ACTIVES ARRAY
     uint256 currentProposalIndex = _proposals[_proposalId].activeIndex;
     uint256 lastActiveIndex = _activeProposalsArray[
-      _activeProposal.current() - 1
+      _activeProposal - 1
     ];
     _activeProposalsArray[currentProposalIndex] = lastActiveIndex;
     _activeProposalsArray.pop();
-    _activeProposal.decrement();
+    _activeProposal--;
     _proposals[_proposalId].activeIndex = MAX_ACTIVE_PROPOSAL;
 
     /// CHECKING USERS STATUS TO UPDATE STREAMS
@@ -477,7 +477,7 @@ contract FluidDao is SuperAppBase, Ownable {
   //// HELPERS
   function _updateUserVotingWeights() internal {
     uint256 userActiveProposal = 0;
-    for (uint256 j = 0; j < _activeProposal.current(); j++) {
+    for (uint256 j = 0; j < _activeProposal; j++) {
       if (
         _alreadyVotedbyMember[msg.sender][_activeProposalsArray[j]].voted ==
         true
@@ -489,7 +489,7 @@ contract FluidDao is SuperAppBase, Ownable {
     uint256 _votingUpdated = uint256(int256(_members[msg.sender].votingPower)) /
       userActiveProposal;
 
-    for (uint256 j = 0; j < _activeProposal.current(); j++) {
+    for (uint256 j = 0; j < _activeProposal; j++) {
       if (
         _alreadyVotedbyMember[msg.sender][_activeProposalsArray[j]].voted ==
         true

@@ -85,7 +85,8 @@ export class CreateProposalComponent extends DappBaseComponent {
   }
 
   content(obj:any){
-    this.proposalForm.controls['descriptionCtrl'].setValue(obj.content);
+
+    this.proposalForm.controls['descriptionCtrl'].setValue(obj.html);
  
 
   }

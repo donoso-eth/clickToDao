@@ -14,6 +14,10 @@ import SuperFluidMetadata from '../../assets/contracts/fluid_dao_metadata.json';
 import { CreateProposalComponent } from './create-proposal/create-proposal.component';
 import { OnlyOwnerComponent } from './only-owner/only-owner.component';
 import { MemberDashboardComponent } from './member-dashboard/member-dashboard.component';
+import { ActiveProposalsComponent } from './active-proposals/active-proposals.component';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
+import { ViewProposalComponent } from './view-proposal/view-proposal.component';
 export const contractMetadata = new InjectionToken<ICONTRACT_METADATA>('contractMetadata')
 
 export const contractProvider= {provide: 'contractMetadata', useValue:SuperFluidMetadata };
@@ -26,6 +30,8 @@ export const contractProvider= {provide: 'contractMetadata', useValue:SuperFluid
     CreateProposalComponent,
     OnlyOwnerComponent,
     MemberDashboardComponent,
+    ActiveProposalsComponent,
+    ViewProposalComponent,
 
   ],
   imports: [
@@ -35,6 +41,8 @@ export const contractProvider= {provide: 'contractMetadata', useValue:SuperFluid
     MatTabsModule,
     MatButtonModule,
     DialogModule,
+    MatInputModule,
+    MatIconModule,
     NotifierModule,
     DappLoadingModule,
     QuillModule.forRoot({}),

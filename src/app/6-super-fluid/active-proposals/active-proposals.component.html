@@ -1,0 +1,14 @@
+<div style="text-align:center">
+    <p>Numer of Active Proposals {{proposalsCount}}</p>
+    <div *ngFor="let proposal of proposals">
+      <p> {{proposal.title}}  <mat-icon (click)="viewProposal(proposal)" style="color: #ff4081;
+        cursor: pointer;
+        position: relative;
+        top: 8px;"
+        >visibility</mat-icon></p>  
+      {{proposal.sender}}    
+      >
+    </div>
+
+</div>
+<view-proposal  [proposal]="currentProposal" (close)="viewState = 'none'" *ngIf="viewState == 'view-proposal'"></view-proposal>

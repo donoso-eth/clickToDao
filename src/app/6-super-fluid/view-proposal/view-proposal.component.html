@@ -1,0 +1,42 @@
+<div class="mainContainer">
+    <div class="createModal">
+      <i  (click)="back()" class="close material-icons">close</i>
+      <div class="Title">{{proposal.title}}</div>
+      <!-- <div class="ImageWrapper">
+        <div class="ImageGroup">
+       <img  (click)="fileupload.click()" style="object-fit: cover;" class="Avatar" src="{{ image_src }}" />
+  
+          <input
+            hidden
+            type="file"
+            (change)="uploadProfile($event)"
+            #fileupload
+          /> 
+ 
+        </div>
+    
+      </div> -->
+  
+ 
+      <!-- <quill-view    [content]="proposal.content" (onEditorCreated)="editorCreated($event)"  format="text" theme="snow"></quill-view> -->
+      <quill-view-html *ngIf="showEditor== true" [content]="proposal.content" theme="snow"></quill-view-html>
+      <br>
+ 
+      <div>
+      <mat-icon style="margin-right:5px;color: #ff4081;
+      cursor: pointer;
+      position: relative;
+      top: 8px;" (click)="vote(true)">
+        thumb_up_alt
+       </mat-icon>
+       <mat-icon style="margin-left:5px;color: #ff4081;
+       cursor: pointer;
+       position: relative;
+       top: 8px;" (click)="vote(false)">
+         thumb_down_alt
+        </mat-icon>
+      </div>
+      <button mat-raised-button color="accent" style="margin-top:30px;" (click)="execute()" 
+      >Execute Proposal</button>
+    </div>
+  </div>

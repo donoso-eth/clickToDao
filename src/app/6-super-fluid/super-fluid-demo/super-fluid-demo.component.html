@@ -45,7 +45,7 @@
       </mat-tab>
       <mat-tab style="height: fit-content; text-align: left" label="DashBoard">
 
-        <member-dashboard >
+        <member-dashboard (onIsMember)="isMember = $event" >
 
         </member-dashboard>
 
@@ -53,8 +53,8 @@
 
       </mat-tab>
 
-      <mat-tab style="height: fit-content; text-align: left" label="Active Proposals">
-        
+      <mat-tab *ngIf="isMember == true" style="height: fit-content; text-align: left" label="Active Proposals">
+          <active-proposals></active-proposals>
       </mat-tab>
 
     </mat-tab-group>

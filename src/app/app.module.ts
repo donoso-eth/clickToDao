@@ -23,7 +23,7 @@ import { HttpClientModule } from '@angular/common/http';
     HttpClientModule,
     SuperFluidDemoModule,
     BrowserAnimationsModule,
-    DappInjectorModule.forRoot({wallet:'wallet', defaultNetwork:'mumbai'}),
+    DappInjectorModule.forRoot({wallet:'privKey', defaultNetwork:'localhost'}),
     StoreModule.forRoot({web3: we3ReducerFunction}),
     QuillModule.forRoot({}),
     AlertsModule,

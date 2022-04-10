@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { Store } from '@ngrx/store';
 import { Framework } from '@superfluid-finance/sdk-core';
@@ -31,11 +31,19 @@ export class MemberDashboardComponent extends DappBaseComponent {
     super(dapp, store);
   }
 
+  @Output()  onIsMember = new EventEmitter<boolean>()
+
   override async hookContractConnected(): Promise<void> {
     this.isMember = await this.checkMemberShip();
   }
 
   async startStream() {
+
+    if(this.dapp.connectedNetwork == 'localhost'){
+      this.mockStartStream()
+      return
+    }
+
     if (this.myBalance == 0) {
       this.alertService.showAlertERROR(
         'OOPS',
@@ -86,13 +94,18 @@ View Your Stream At: https://app.superfluid.finance/dashboard/${contractAddress}
   }
 
   async stopStream() {
+    if(this.dapp.connectedNetwork == 'localhost'){
+      this.mockStopStream()
+      return
+    }
+
     try {
       this.store.dispatch(Web3Actions.chainBusy({ status: true }));
-      console.log('again');
+  
       const contractAddress = this.dapp.defaultContract.address;
       console.log(contractAddress);
       const flowRate = '0';
-      console.log('again');
+ 
       const sf = await Framework.create({
         networkName: 'mumbai',
         provider: this.dapp.provider,
@@ -151,13 +164,16 @@ View Your Stream At: https://app.superfluid.finance/dashboard/${contractAddress}
     ]);
 
     if (result.payload[0] == 0) {
+      this.onIsMember.emit(false)
       return false;
+     
     }
 
     if (result.payload[0] == 1) {
+      this.onIsMember.emit(true)
       return true;
     }
-
+    this.onIsMember.emit(false)
     return false;
   }
 
