@@ -15,6 +15,7 @@ import {
   AngularContract,
   DappBaseComponent,
   DappInjectorService,
+  Web3Actions,
 } from 'angular-web3';
 import { Store } from '@ngrx/store';
 import { first, firstValueFrom } from 'rxjs';
@@ -132,7 +133,112 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
     }
   }
 
-  async stopStream(){
+  async startStream() {
+    if (this.myBalance == 0) {
+      this.alertService.showAlertERROR(
+        'OOPS',
+        'to Start the subscription uyou require some tokens'
+      );
+      return;
+    }
+
+    try {
+      this.store.dispatch(Web3Actions.chainBusy({ status: true }));
+
+      const contractAddress =
+        this.dapp.contracts['superfluid'].address;
+
+      const flowRate = '3858024691358';
+
+      const sf = await Framework.create({
+        networkName: 'mumbai',
+        provider: this.dapp.defaultProvider,
+      });
+
+      const encodedData = utils.defaultAbiCoder.encode(['uint256'], [1]);
+
+      const createFlowOperation = sf.cfaV1.createFlow({
+        flowRate: flowRate,
+        receiver: contractAddress,
+        superToken: '0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f', //environment.mumbaiDAIx,
+        userData: encodedData,
+        overrides: {
+          gasPrice: utils.parseUnits('100', 'gwei'),
+          gasLimit: 2000000,
+        },
+      });
+      console.log('Creating your stream...');
+
+      const result = await createFlowOperation.exec(
+        this.dapp.signer
+      );
+      const result2 = await result.wait();
+
+      console.log(
+        `Congrats - you've just created a money stream!
+View Your Stream At: https://app.superfluid.finance/dashboard/${contractAddress}`
+      );
+      this.hasSubscription = await this.dapp.contracts[
+        'superfluid'
+      ].contract.hasSubscription(1, this.myaddress);
+
+      this.store.dispatch(Web3Actions.chainBusy({ status: false }));
+    } catch (error) {
+      console.log(error);
+      this.store.dispatch(Web3Actions.chainBusy({ status: false }));
+    }
+  }
+
+  async stopStream() {
+    try {
+      this.store.dispatch(Web3Actions.chainBusy({ status: true }));
+      console.log('again');
+      const contractAddress =
+        this.dapp.defaultContract.address;
+        console.log(contractAddress)
+      const flowRate = '0';
+      console.log('again');
+      const sf = await Framework.create({
+        networkName: 'mumbai',
+        provider: this.dapp.provider,
+      });
+
+      console.log('again');
+      const encodedData = utils.defaultAbiCoder.encode(['uint256'], ['1']);
+      console.log(encodedData);
+      const myaddress =
+        await this.dapp.signer.getAddress();
+      const createFlowOperation = sf.cfaV1.deleteFlow({
+        sender: myaddress,
+        receiver: contractAddress,
+        superToken: '0x5D8B4C2554aeB7e86F387B4d6c00Ac33499Ed01f', //environment.mumbaiDAIx,
+        userData: encodedData,
+        overrides: {
+          gasPrice: utils.parseUnits('100', 'gwei'),
+          gasLimit: 2000000,
+        },
+      });
+      console.log('stoping your stream...');
+
+      const result = await createFlowOperation.exec(
+        this.dapp.signer
+      );
+      const result2 = await result.wait();
+
+      console.log(result2);
+
+      console.log(
+        `Congrats - you've just stoped a money stream  View Your Stream At: https://app.superfluid.finance/dashboard/${contractAddress}`
+      );
+
+      this.store.dispatch(Web3Actions.chainBusy({ status: false }));
+    } catch (error) {
+      console.log(error);
+      this.store.dispatch(Web3Actions.chainBusy({ status: false }));
+    }
+  }
+
+  async mockStopStream(){
     console.log('aui ahora')
     await this.defaultContract.runTransactionFunction('mockRevokePermision',[{ gasPrice: utils.parseUnits('100', 'gwei'), 
        gasLimit: 2000000 }])
@@ -150,7 +256,7 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
 
   }
 
-  async startStream(){
+  async mockStartStream(){
     console.log('aui ahora')
    await this.defaultContract.runTransactionFunction('mockAddPermision',[{ gasPrice: utils.parseUnits('100', 'gwei'), 
       gasLimit: 2000000 }])
