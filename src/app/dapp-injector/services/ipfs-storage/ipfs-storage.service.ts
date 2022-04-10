@@ -74,6 +74,7 @@ export class IpfsStorageService {
   const cid = await storage.put([myFile])
 
    console.log(cid)
+   return cid
   }
 
 

@@ -5,12 +5,14 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatButtonModule } from '@angular/material/button';
 
-import { DialogModule, NotifierModule} from '../dapp-components'
+import { DappLoadingModule, DialogModule, NotifierModule} from '../dapp-components'
 
 
 import { ICONTRACT_METADATA } from 'angular-web3';
-
+import { QuillModule } from 'ngx-quill'
 import SuperFluidMetadata from '../../assets/contracts/fluid_dao_metadata.json';
+import { CreateProposalComponent } from './create-proposal/create-proposal.component';
+import { OnlyOwnerComponent } from './only-owner/only-owner.component';
 export const contractMetadata = new InjectionToken<ICONTRACT_METADATA>('contractMetadata')
 
 export const contractProvider= {provide: 'contractMetadata', useValue:SuperFluidMetadata };
@@ -19,7 +21,10 @@ export const contractProvider= {provide: 'contractMetadata', useValue:SuperFluid
 
 @NgModule({
   declarations: [
-    SuperFluidDemoComponent
+    SuperFluidDemoComponent,
+    CreateProposalComponent,
+    OnlyOwnerComponent,
+
   ],
   imports: [
     CommonModule,
@@ -28,7 +33,9 @@ export const contractProvider= {provide: 'contractMetadata', useValue:SuperFluid
     MatTabsModule,
     MatButtonModule,
     DialogModule,
-    NotifierModule
+    NotifierModule,
+    DappLoadingModule,
+    QuillModule.forRoot({}),
   ],
   exports: [
     SuperFluidDemoComponent

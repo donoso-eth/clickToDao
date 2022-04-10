@@ -9,6 +9,7 @@ import { DappInjectorModule } from './dapp-injector/dapp-injector.module';
 import { StoreModule } from '@ngrx/store';
 import { we3ReducerFunction } from 'angular-web3';
 import { QuillModule } from 'ngx-quill'
+import { AlertsModule } from './dapp-components/alerts';
 
 
 @NgModule({
@@ -22,7 +23,8 @@ import { QuillModule } from 'ngx-quill'
     BrowserAnimationsModule,
     DappInjectorModule.forRoot({wallet:'privKey', defaultNetwork:'localhost'}),
     StoreModule.forRoot({web3: we3ReducerFunction}),
-    QuillModule.forRoot()
+    QuillModule.forRoot({}),
+    AlertsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

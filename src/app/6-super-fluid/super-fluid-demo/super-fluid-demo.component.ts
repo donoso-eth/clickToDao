@@ -15,6 +15,7 @@ import {
   AngularContract,
   DappBaseComponent,
   DappInjectorService,
+  Web3Actions,
 } from 'angular-web3';
 import { Store } from '@ngrx/store';
 import { first, firstValueFrom } from 'rxjs';
@@ -29,6 +30,8 @@ import { JsonRpcServer } from 'hardhat/types';
 })
 export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit {
 
+  viewState: 'menu' | 'create-proposal'  = 'menu' ;
+  
   isMember = false;
   walletBalance!: IBALANCE;
   contractBalance!: IBALANCE;
@@ -40,7 +43,7 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
   provider!: ethers.providers.JsonRpcProvider;
   //  signer: any;
   deployer_balance: any;
-  loading_contract: 'loading' | 'found' | 'error' = 'loading';
+
 
   // newWallet!: ethers.Wallet;
   nameCtrl = new FormControl('', Validators.required)
@@ -53,6 +56,7 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
   myBalance!: number;
   niceBalance!: string;
   ERC20_METADATA:any;
+  isOwner!: boolean;
 
   constructor(
     private dialogService: DialogService,
@@ -70,8 +74,25 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
 }
 
   async onChainStuff() {
+    this.store.dispatch(Web3Actions.chainBusy({ status: true }));
+    this.isOwner = false;
+    try {
+      const owner = await this.defaultContract.runFunction('owner',[]);
+      console.log(owner.payload[0])
+      console.log(this.dapp.signerAddress)
+      if (this.dapp.signerAddress == owner.payload[0]){
+        this.isOwner = true;
+      }
+
+    } catch (error) {
+        console.log(error)
+    }
+
     try {
       // await this.dapp.init();
+      
+ 
+
 
       this.deployer_address = this.dapp.signerAddress!;
 
@@ -126,9 +147,10 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
         abi: this.defaultContract.abi,
         network: '',
       };
+      this.store.dispatch(Web3Actions.chainBusy({ status: false }));
     } catch (error) {
       console.log(error);
-      this.loading_contract = 'error';
+      this.store.dispatch(Web3Actions.chainBusy({ status: false }));
     }
   }
 
@@ -166,6 +188,10 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
     }
 
 
+  }
+
+  createProposal(){
+    this.viewState = 'create-proposal';
   }
 
 
