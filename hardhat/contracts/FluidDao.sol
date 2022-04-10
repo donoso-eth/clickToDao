@@ -21,7 +21,8 @@ contract FluidDao is SuperAppBase, Ownable {
   uint256 public PROPOSAL_PERIOD = 7 * 24 * 60 * 60;
   uint256 public MAX_ACTIVE_PROPOSAL = 5;
   int96 public INFLOW_MAX = 3858024691358;
-
+  int96 public INFLOW_ACTIVE = 964506172839;
+  int96 public INFLOW_CORE = 428669410150;
   //  ====== ==== === TREASURY  ====== ==== === //
   uint256 public _netFlow;
 
@@ -144,7 +145,7 @@ contract FluidDao is SuperAppBase, Ownable {
   // ============= DAO Modifiers ============= ============= =============  //
   // #region DAO MOdidiers
   modifier onlyMembers() {
-    console.log(msg.sender);
+ 
     MembershipStatus test = isMember(msg.sender);
     //console.log(test);
     require(
@@ -435,12 +436,13 @@ contract FluidDao is SuperAppBase, Ownable {
 
     /// CHECKING USERS STATUS TO UPDATE STREAMS
     for (uint256 j = 0; j < _totalMembers; j++) {
+      address _memberAddress = _membersArray[j];
       Member storage checkMember = _members[_membersArray[j]];
       MembershipStatus oldMemberStatus = checkMember.status;
-      bool activeLastPeriod = false;
-      if (checkMember.lastActive > block.timestamp - PROPOSAL_PERIOD) {
-        activeLastPeriod = true;
-      }
+      bool activeLastPeriod = true;
+      // if (checkMember.lastActive > block.timestamp - PROPOSAL_PERIOD) {
+      //   activeLastPeriod = true;
+      // }
 
       /// update MemberFlows
       if (activeLastPeriod == false) {
@@ -460,9 +462,11 @@ contract FluidDao is SuperAppBase, Ownable {
           oldMemberStatus == MembershipStatus.ACTIVE ||
           oldMemberStatus == MembershipStatus.CORE
         ) {
+
           // do nothing
         } else if (oldMemberStatus == MembershipStatus.SLEEPING) {
           checkMember.status = MembershipStatus.ACTIVE;
+          _updateFlowFromSleepToActive(_memberAddress);
           //// launch 40% backstream
         }
       }
@@ -514,6 +518,13 @@ contract FluidDao is SuperAppBase, Ownable {
   // ============= SuperApp Flow Manipulation & callbacks ============= ==========
   // region superAPP and FlowManipulation
 
+  function  _updateFlowFromSleepToActive(address _memberAddress)  internal{
+    int96 newFlow =  INFLOW_ACTIVE;
+    _netFlow = _netFlow - uint256(uint96(_netFlow));
+    _createReturningFlow(_memberAddress,newFlow );
+
+   }
+
   function _updateFlowFromActiveToSleep(Member memory _checkMember) internal {
     int96 _currentBackFlow = (_checkMember.inflow * 400) / 1000;
     _netFlow = _netFlow + uint256(uint96(_currentBackFlow));
@@ -553,9 +564,26 @@ contract FluidDao is SuperAppBase, Ownable {
     //// TODO reduce FLOW with _netFlow
   }
 
+
+
+
   function _dispatchFlows() internal {}
 
-  function _createReturningFlow(address member) internal {}
+  function _createReturningFlow(address member, int96 inFlowRate ) internal {
+        bytes memory newCtx;
+        (newCtx, ) = _host.callAgreementWithContext(
+                _cfa,
+                abi.encodeWithSelector(
+                    _cfa.createFlow.selector,
+                    _acceptedToken,
+                    member,
+                    inFlowRate,
+                    new bytes(0) // placeholder
+                ),
+                "0x",
+                newCtx
+            );
+  }
 
   function _stopReturningFlow(address member) internal {}
 

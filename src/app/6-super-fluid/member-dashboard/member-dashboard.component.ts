@@ -29,6 +29,8 @@ export class MemberDashboardComponent extends DappBaseComponent {
     private alertService: AlertService
   ) {
     super(dapp, store);
+
+
   }
 
   @Output()  onIsMember = new EventEmitter<boolean>()

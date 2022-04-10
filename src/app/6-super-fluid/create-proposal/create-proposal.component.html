@@ -37,52 +37,5 @@
         >create Proposal</button>
     </div>
   </div>
-  <div
-    *ngIf="show_create_success == true"
-    style="
-      width: 100vw;
-      height: 100vh;
-      background-color: rgba(91, 87, 87, 0.7);
-      position: fixed;
-      top: 0px;
-      left: 0px;
-      z-index: 1000;
-    "
-  >
-    <app-particles
-      style="position: fixed; width: 100%; height: 100%; left: 0; top: 0"
-      [shape]="2"
-      [moveSpeed]="9"
-      [defSize]="20"
-      [number]="200"
-      [linkingFlag]="false"
-      [snowEffect]="true"
-    >
-    </app-particles>
-    <div
-      style="
-        width: 80%;
-        max-width: 500px;
-        min-width: 300px;
-        background: white;
-        border-radius: 5px;
-        opacity: 1;
-        margin: auto;
-        display: flex;
-        justify-content: center;
-        flex-direction: column;
-        text-align: center;
-        transform: translateY(calc(50vh - 280px));
-        padding: 10px 20px 32px;
-      "
-    >
-      <mat-icon (click)="close()" style="color: red; cursor: pointer"
-        >clear</mat-icon
-      >
-      <h3 style="color:var(--seconday);margin-bottom:10px">Bravo!!!</h3>
-      <p style="color:var(--primary)">You Just Send a Proposal <span style="color:var(--twitter)">CODEO</span></p>
-  
-   
-    </div>
-  </div>
+
   

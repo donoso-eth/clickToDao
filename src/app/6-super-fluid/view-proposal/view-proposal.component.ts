@@ -27,6 +27,7 @@ export class ViewProposalComponent
   extends DappBaseComponent
   implements AfterViewInit
 {
+  show_create_success = false;
   viewState: 'none' | 'view-proposal';
   showEditor = false;
   constructor(
@@ -68,14 +69,20 @@ export class ViewProposalComponent
       this.store.dispatch(Web3Actions.chainBusy({ status: false }));
       // bafybeihkcv64gshryyuywwieb2ckz562ahtuflzr3ypnwvmj7tlvelbsda
       if (result.msg.success == true) {
-        this.alertService.showAlertOK('OK', `You executed the calculation for proposal ${this.proposal.title}`);
-        const proposal_query = await this.defaultContract.runFunction(
+           const proposal_query = await this.defaultContract.runFunction(
           '_proposals',
           [this.proposal.id]
         );
-          console.log(proposal_query)
+          console.log(proposal_query.payload)
+          if (proposal_query.payload.status == 3){
+            this.show_create_success = true;
+          } else {
+            this.alertService.showAlertOK('OK', `You executed the calculation for proposal ${this.proposal.title}`);
+            this.back();
+          }
 
-        this.back();
+
+       
       } else {
         const myError = (result.msg.error_message as string).replace(
           'Error: VM Exception while processing transaction: reverted with reason string ',
@@ -90,7 +97,7 @@ export class ViewProposalComponent
       this.alertService.showAlertERROR('OOPS', 'Something wrong has happened');
     }
   }
-  async vote(value) {
+  async vote(value: any) {
     this.store.dispatch(Web3Actions.chainBusy({ status: true }));
     try {
       const result = await this.defaultContract.runFunction('vote', [
