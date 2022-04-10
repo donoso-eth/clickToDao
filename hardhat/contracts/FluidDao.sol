@@ -20,9 +20,9 @@ contract FluidDao is SuperAppBase, Ownable {
 
   uint256 public PROPOSAL_PERIOD = 7 * 24 * 60 * 60;
   uint256 public MAX_ACTIVE_PROPOSAL = 5;
-  int96 public INFLOW_MAX = 3858024691358;
+  int96 public INFLOW_MAX =   3858024691358;
   int96 public INFLOW_ACTIVE = 964506172839;
-  int96 public INFLOW_CORE = 428669410150;
+  int96 public INFLOW_CORE =   428669410150;
   //  ====== ==== === TREASURY  ====== ==== === //
   uint256 public _netFlow;
 
@@ -44,6 +44,7 @@ contract FluidDao is SuperAppBase, Ownable {
     uint256 lastActive;
     MembershipStatus status;
     bool lastVoteBool;
+    bytes _ctx;
   }
 
   struct Vote {
@@ -135,7 +136,8 @@ contract FluidDao is SuperAppBase, Ownable {
    * DAO Mocks Permissions
    *************************************************************************/
   function mockAddPermision() external {
-    _addPermission(3858024691358,msg.sender);
+    bytes memory _localB = "0x";
+   // _addPermission(3858024691358,msg.sender,_localB);
   }
 
   function mockRevokePermision() external {
@@ -150,7 +152,7 @@ contract FluidDao is SuperAppBase, Ownable {
     //console.log(test);
     require(
       isMember(msg.sender) == MembershipStatus.ACTIVE ||
-        isMember(msg.sender) == MembershipStatus.CORE,
+        isMember(msg.sender) == MembershipStatus.CORE || isMember(msg.sender) == MembershipStatus.SLEEPING,
       "NOT_MEMBER"
     );
     _;
@@ -235,7 +237,7 @@ contract FluidDao is SuperAppBase, Ownable {
     return _members[member].status;
   }
 
-  function _addPermission(int96 _inflow,address sender) internal {
+  function _addPermission(int96 _inflow,address sender,bytes calldata _ctx) internal {
     int96 _votingPower = _inflow;
  
     if (_inflow > INFLOW_MAX) {
@@ -252,8 +254,9 @@ contract FluidDao is SuperAppBase, Ownable {
       _inflow,
       0,
       0,
-      MembershipStatus.ACTIVE,
-      false
+      MembershipStatus.SLEEPING,
+      false,
+      _ctx
     );
     _dispatchFlows();
   }
@@ -266,7 +269,8 @@ contract FluidDao is SuperAppBase, Ownable {
       0,
       block.timestamp,
       MembershipStatus.WENT_AWAY,
-      false
+      false,
+      "0x"
     );
     _netFlow = _netFlow - uint256(uint96(inflow));
     _stopReturningFlow(sender);
@@ -436,6 +440,7 @@ contract FluidDao is SuperAppBase, Ownable {
 
     /// CHECKING USERS STATUS TO UPDATE STREAMS
     for (uint256 j = 0; j < _totalMembers; j++) {
+ 
       address _memberAddress = _membersArray[j];
       Member storage checkMember = _members[_membersArray[j]];
       MembershipStatus oldMemberStatus = checkMember.status;
@@ -443,7 +448,7 @@ contract FluidDao is SuperAppBase, Ownable {
       // if (checkMember.lastActive > block.timestamp - PROPOSAL_PERIOD) {
       //   activeLastPeriod = true;
       // }
-
+  
       /// update MemberFlows
       if (activeLastPeriod == false) {
         if (oldMemberStatus == MembershipStatus.ACTIVE) {
@@ -462,11 +467,13 @@ contract FluidDao is SuperAppBase, Ownable {
           oldMemberStatus == MembershipStatus.ACTIVE ||
           oldMemberStatus == MembershipStatus.CORE
         ) {
-
+         
           // do nothing
         } else if (oldMemberStatus == MembershipStatus.SLEEPING) {
           checkMember.status = MembershipStatus.ACTIVE;
+         
           _updateFlowFromSleepToActive(_memberAddress);
+       
           //// launch 40% backstream
         }
       }
@@ -569,19 +576,18 @@ contract FluidDao is SuperAppBase, Ownable {
 
   function _dispatchFlows() internal {}
 
-  function _createReturningFlow(address member, int96 inFlowRate ) internal {
-        bytes memory newCtx;
-        (newCtx, ) = _host.callAgreementWithContext(
+  function _createReturningFlow(address member, int96 inFlowRate) internal {
+       
+        _host.callAgreement(
                 _cfa,
-                abi.encodeWithSelector(
-                    _cfa.createFlow.selector,
-                    _acceptedToken,
-                    member,
-                    inFlowRate,
-                    new bytes(0) // placeholder
-                ),
-                "0x",
-                newCtx
+               abi.encodeWithSelector(
+                _cfa.createFlow.selector,
+                _acceptedToken,
+                member,
+                inFlowRate,
+                new bytes(0) // placeholder
+            ),
+                "0x"
             );
   }
 
@@ -608,7 +614,7 @@ contract FluidDao is SuperAppBase, Ownable {
       sender,
       address(this)
     );
-    _addPermission(inFlowRate,sender);
+    _addPermission(inFlowRate,sender,_ctx);
 
     return _ctx;
   }

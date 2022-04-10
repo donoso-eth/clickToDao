@@ -44,7 +44,7 @@ export class OnlyOwnerComponent extends DappBaseComponent {
   }
 
   async getStreams() {
-    const result = await this.grapQlService.query();
+    const result = await this.grapQlService.query(this.defaultContract.address);
     this.streams = result.streams;
     console.log(this.streams);
     this.flowRate = 0;
@@ -94,9 +94,6 @@ export class OnlyOwnerComponent extends DappBaseComponent {
     this.fourDec = niceFour.substring(niceFour.length - 4, niceFour.length);
   }
 
-  deployer_address(deployer_address: any) {
-    throw new Error('Method not implemented.');
-  }
 
   ngOnInit(): void {}
 }

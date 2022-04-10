@@ -33,12 +33,13 @@ export class GraphQlService {
   constructor(private apollo: Apollo) {}
   
   
- async  query() {
+ async  query(address:string) {
     // this.postsQuery = this.apollo.watchQuery<any>({
     //   query: GET_POSTS,
     //   pollInterval: 500,
     // });
-    const variables = {receiver: "0x06ee660a1b557c40e6cd9f1af5c54709838b2ca8"};
+    console.log(address)
+    const variables = {receiver: address.toLowerCase()};
   const posts = await firstValueFrom(this.apollo.query<any>({
     query: gql(GET_QUERY),
     variables,

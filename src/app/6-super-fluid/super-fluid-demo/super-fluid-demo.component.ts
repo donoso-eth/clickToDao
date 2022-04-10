@@ -101,12 +101,12 @@ export class SuperFluidDemoComponent extends DappBaseComponent implements OnInit
       const result  = await this.defaultContract.runFunction('isMember',[this.deployer_address]);
    
 
-      if(result.payload[0]== 0){
-        this.isMember = false;
-      }
+ 
 
-      if(result.payload[0]== 1){
+      if(result.payload[0]== 1 || result.payload[0]== 2 ||  result.payload[0] == 4){
         this.isMember = true;
+      } else {
+        this.isMember = false;
       }
 
   
