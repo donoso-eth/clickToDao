@@ -1,10 +1,12 @@
 
+  <div class="wrapper"></div>
   <div style="text-align:center">
   <h2>💃💃💃   Your FLUID DAO  👏 👏 👏</h2>
   <div style="max-width: 800px; width: 90vw; margin: auto">
     <mat-tab-group mat-align-tabs="center">
-      <mat-tab  label="Owner">
-        <p style="text-align: center; font-size: 20px">
+      <mat-tab *ngIf="isOwner"  label="Owner">
+        <only-owner></only-owner>
+        <!-- <p style="text-align: center; font-size: 20px">
     
         </p>
 
@@ -39,7 +41,7 @@
             <br />
           </p>
    
-        </div>
+        </div> -->
       </mat-tab>
       <mat-tab style="height: fit-content; text-align: left" label="DashBoard">
 
@@ -77,6 +79,7 @@
 
         <div *ngIf="isMember==true">
           <button mat-raised-button color="accent" style="margin-top:30px" (click)="stopStream()" >Stop Stream</button>
+          <button mat-raised-button color="accent" style="margin-top:30px" (click)="createProposal()" >Create Proposal</button>
         </div>
 
       </mat-tab>
@@ -94,3 +97,5 @@
     </h2>
   </div>
 </div>
+<dapp-loading [isBusy]="blockchain_is_busy"></dapp-loading>
+<create-proposal (close)="viewState = 'menu'" *ngIf="viewState == 'create-proposal'"></create-proposal>
